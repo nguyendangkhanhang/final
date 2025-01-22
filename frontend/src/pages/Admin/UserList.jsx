@@ -8,6 +8,8 @@ import {
   useUpdateUserMutation,
 } from "../../redux/api/usersApiSlice";
 import { toast } from "react-toastify";
+import AdminMenu from "./AdminMenu";
+
 
 
 const UserList = () => {
@@ -58,7 +60,6 @@ const UserList = () => {
   
     return (
       <div className="p-4">
-        <h1 className="text-2xl font-semibold mb-4">Users</h1>
         {isLoading ? (
           <Loader />
         ) : error ? (
@@ -67,7 +68,7 @@ const UserList = () => {
           </Message>
         ) : (
           <div className="flex flex-col md:flex-row">
-            {/* <AdminMenu /> */}
+            <AdminMenu />
             <table className="w-full md:w-4/5 mx-auto">
               <thead>
                 <tr>

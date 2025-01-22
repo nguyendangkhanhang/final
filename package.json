@@ -7,7 +7,6 @@
     "backend": "nodemon backend/index.js",
     "frontend": "npm run dev --prefix frontend",
     "dev": "concurrently \"npm run frontend\" \"npm run backend\""
-
   },
   "keywords": [],
   "author": "",
@@ -25,6 +24,8 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.3",
     "multer": "^1.4.5-lts.1",
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.9",
+    "react-slick": "^0.30.3",
+    "slick-carousel": "^1.8.1"
   }
 }
