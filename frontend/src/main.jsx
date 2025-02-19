@@ -67,7 +67,7 @@ const router = createBrowserRouter(
         <Route path="orderlist" element={<OrderList />} />
         <Route path="dashboard" element={<AdminDashboard />} />
       </Route>
-
+      
     </Route>
   )
 );
