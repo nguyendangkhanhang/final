@@ -1,5 +1,6 @@
 import express from "express";
-import {  createUser,
+import {  
+    createUser,
     loginUser,
     logoutCurrentUser,
     getAllUsers,
@@ -7,21 +8,21 @@ import {  createUser,
     updateCurrentUserProfile,
     deleteUserById,
     getUserById,
-    updateUserById
+    updateUserById,
+    loginAdmin
 } from "../controllers/userController.js";
 import { authenticate, authorizeAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.route("/").post(createUser).get(authenticate, authorizeAdmin, getAllUsers);
-router.post("/auth", loginUser);
-router.post("/logout", logoutCurrentUser);
-
+router.post("/register", createUser); // Đăng ký user
+router.post("/auth", loginUser); // Đăng nhập user (Không cho admin vào)
+router.post("/logout", logoutCurrentUser); // Đăng xuất
 router.route("/profile").get(authenticate, getCurrentUserProfile).put(authenticate, updateCurrentUserProfile);
 
-// ADMIN ROUTES
-router
-  .route("/:id")
+router.post("/admin/login", loginAdmin); // Đăng nhập admin
+router.get("/", authenticate, authorizeAdmin, getAllUsers);
+router.route("/admin/users/:id")
   .delete(authenticate, authorizeAdmin, deleteUserById)
   .get(authenticate, authorizeAdmin, getUserById)
   .put(authenticate, authorizeAdmin, updateUserById);

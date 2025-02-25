@@ -26,7 +26,10 @@ const PlaceOrder = () => {
   const placeOrderHandler = async () => {
     try {
       const res = await createOrder({
-        orderItems: cart.cartItems,
+        orderItems: cart.cartItems.map(item => ({
+          ...item,
+          image: Array.isArray(item.image) ? item.image[0] : item.image, // Chỉ lấy chuỗi đầu tiên nếu là mảng
+        })),
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
         itemsPrice: cart.itemsPrice,

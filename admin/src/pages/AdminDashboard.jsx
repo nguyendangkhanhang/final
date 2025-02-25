@@ -1,15 +1,14 @@
 import Chart from "react-apexcharts";
-import { useGetUsersQuery } from "../../redux/api/usersApiSlice";
+import { useGetUsersQuery } from "@frontend/redux/api/usersApiSlice";
 import {
   useGetTotalOrdersQuery,
   useGetTotalSalesByDateQuery,
   useGetTotalSalesQuery,
-} from "../../redux/api/orderApiSlice";
-
+} from "@frontend/redux/api/orderApiSlice"; 
 import { useState, useEffect } from "react";
-import AdminMenu from "./AdminMenu";
 import OrderList from "./OrderList";
-import Loader from "../../components/Loader";
+import Loader from "@frontend/components/Loader";
+import AdminMenu from "./AdminMenu";
 
 const AdminDashboard = () => {
   const { data: sales, isLoading } = useGetTotalSalesQuery();
@@ -90,7 +89,7 @@ const AdminDashboard = () => {
 
   return (
     <>
-      <AdminMenu />
+    <AdminMenu />
 
       <section className="xl:ml-[4rem] md:ml-[0rem]">
         <div className="w-[80%] flex justify-around flex-wrap">

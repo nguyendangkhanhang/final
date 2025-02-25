@@ -32,7 +32,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
     }),
     getUsers: builder.query({
       query: () => ({
-        url: USERS_URL,
+          url: USERS_URL,
+          credentials: "include", // 🔥 Đảm bảo gửi cookie chứa token
       }),
       providesTags: ["User"],
       keepUnusedDataFor: 5,

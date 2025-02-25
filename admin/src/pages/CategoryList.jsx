@@ -4,11 +4,11 @@ import {
   useUpdateCategoryMutation,
   useDeleteCategoryMutation,
   useFetchCategoriesQuery,
-} from "../../redux/api/categoryApiSlice";
+} from "@frontend/redux/api/categoryApiSlice";
 
 import { toast } from "react-toastify";
-import CategoryForm from "../../components/CategoryForm";
-import Modal from "../../components/Modal";
+import CategoryForm from "../components/CategoryForm";
+import Modal from "@frontend/components/Modal";
 import AdminMenu from "./AdminMenu";
 
 const CategoryList = () => {
@@ -123,13 +123,13 @@ return (
             </div>
 
             <Modal isOpen={modalVisible} onClose={() => setModalVisible(false)}>
-            <CategoryForm
+            {/* <CategoryForm
                 value={updatingName}
                 setValue={(value) => setUpdatingName(value)}
                 handleSubmit={handleUpdateCategory}
                 buttonText="Update"
                 handleDelete={handleDeleteCategory}
-            />
+            /> */}
             </Modal>
         </div>
     </div>
