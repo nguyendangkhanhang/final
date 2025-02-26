@@ -13,15 +13,6 @@ import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import Profile from "./pages/User/Profile";
 
-// import AdminRoute from "./pages/Admin/AdminRoute";
-// import UserList from "./pages/Admin/UserList";
-// import CategoryList from "./pages/Admin/CategoryList";
-// import ProductList from "./pages/Admin/ProductList";
-// import AllProducts from "./pages/Admin/AllProducts";
-// import ProductUpdate from "./pages/Admin/ProductUpdate";
-// import OrderList from "./pages/Admin/OrderList.jsx";
-// import AdminDashboard from "./pages/Admin/AdminDashboard.jsx";
-
 import Home from "./pages/Home.jsx";
 import Favorites from "./pages/Products/Favorites.jsx";
 import ProductDetails from "./pages/Products/ProductDetails.jsx";
@@ -52,17 +43,6 @@ const router = createBrowserRouter(
         <Route path="/placeorder" element={<PlaceOrder />} />
         <Route path="/order/:id" element={<Order />} />
       </Route>
-
-      {/* <Route path="/admin" element={<AdminRoute />}>
-        <Route path="userlist" element={<UserList />} />
-        <Route path="categorylist" element={<CategoryList />} />
-        <Route path="productlist" element={<ProductList />} />
-        <Route path="allproductslist" element={<AllProducts />} />
-        <Route path="productlist/:pageNumber" element={<ProductList />} />
-        <Route path="product/update/:_id" element={<ProductUpdate />} />
-        <Route path="orderlist" element={<OrderList />} />
-        <Route path="dashboard" element={<AdminDashboard />} />
-      </Route> */}
     </Route>
   )
 );

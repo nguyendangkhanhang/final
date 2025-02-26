@@ -127,20 +127,27 @@ const updateCurrentUserProfile = asyncHandler(async (req, res) => {
 const loginAdmin = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
-  if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-    const token = createToken(res, "admin123"); // Fake userId cho admin
+  const existingUser = await User.findOne({ email });
 
-    return res.status(200).json({
-      _id: "admin123",
-      username: "Admin",
-      email: process.env.ADMIN_EMAIL,
-      isAdmin: true,
-      token, // 🔥 Thêm token vào response JSON
-    });
+  if (existingUser && existingUser.isAdmin) {
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+
+    if (isPasswordValid) {
+      const token = createToken(res, existingUser._id, true);
+      res.status(200).json({
+        _id: existingUser._id,
+        username: existingUser.username,
+        email: existingUser.email,
+        isAdmin: true,
+        token,
+      });
+      return;
+    }
   }
 
   res.status(403).json({ message: "Access Denied. Admins only." });
 });
+
 
 // Lấy danh sách tất cả users (Chỉ Admin mới có quyền)
 const getAllUsers = asyncHandler(async (req, res) => {

@@ -3,30 +3,51 @@ import User from "../models/userModel.js";
 import asyncHandler from "./asyncHandler.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
-  let token = req.cookies.jwt;
+  let token = req.cookies.jwt || req.cookies.adminToken; // 🔥 Kiểm tra cả hai token
+
   if (token) {
-      try {
-          const decoded = jwt.verify(token, process.env.JWT_SECRET);
-          req.user = await User.findById(decoded.userId).select("-password");
-          console.log("Authenticated user:", req.user); // ✅ Kiểm tra user có isAdmin không
-          next();
-      } catch (error) {
-          res.status(401);
-          throw new Error("Not authorized, token failed");
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.userId).select("-password");
+
+      if (!req.user) {
+        res.status(401);
+        throw new Error("User not found.");
       }
-  } else {
+
+      next();
+    } catch (error) {
       res.status(401);
-      throw new Error("Not authorized, no token");
+      throw new Error("Not authorized, token failed.");
+    }
+  } else {
+    res.status(401);
+    throw new Error("Not authorized, no token.");
   }
 });
 
+const authenticateAdmin = asyncHandler(async (req, res, next) => {
+  let token = req.cookies.adminToken || req.headers.authorization?.split(" ")[1];
 
-const authorizeAdmin = (req, res, next) => {
-  if (req.user && req.user.isAdmin) {
-    next();
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.userId).select("-password");
+
+      if (!req.user || !req.user.isAdmin) {
+        res.status(403);
+        throw new Error("Not authorized as an admin.");
+      }
+
+      next();
+    } catch (error) {
+      res.status(401);
+      throw new Error("Not authorized, token failed");
+    }
   } else {
-    res.status(401).send("Not authorized as an admin.");
+    res.status(401);
+    throw new Error("Not authorized, no token");
   }
-};
+});
 
-export { authenticate, authorizeAdmin };
+export { authenticate, authenticateAdmin };
