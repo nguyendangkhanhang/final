@@ -15,7 +15,7 @@ const Ratings = ({ value, text, color }) => {
       {[...Array(emptyStar)].map((_, index) => (
         <FaRegStar key={index} className={`text-${color} ml-1`} />
       ))}
-
+      
       <span className={`rating-text ml-{2rem} text-${color}`}>
         {text && text}
       </span>

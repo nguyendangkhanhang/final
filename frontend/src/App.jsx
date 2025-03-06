@@ -1,10 +1,12 @@
 import { Outlet } from "react-router-dom";
 import Navigation from "./pages/Auth/Navigation";
+import Footer from './components/Footer'
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./redux/features/auth/authSlice";
+import ChatboxApp from "./chatbox/ChatboxApp";
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -14,7 +16,6 @@ const App = () => {
     localStorage.setItem("token", token);
   }, [token]);
 
-  // 🔥 Khôi phục userInfo từ localStorage khi reload
   useEffect(() => {
     const savedUserInfo = localStorage.getItem("userInfo");
     if (savedUserInfo) {
@@ -26,9 +27,11 @@ const App = () => {
     <>
       <ToastContainer />
       <Navigation />
-      <main className="py-3">
+      <main className="pt-[5rem] py-3">
         <Outlet />
+        <ChatboxApp /> {/* Hiển thị chatbox trên web chính */}
       </main>
+      <Footer />
     </>
   );
 };

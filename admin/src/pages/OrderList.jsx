@@ -32,50 +32,52 @@ const OrderList = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order._id}>
-                  <td>
-                    <img
-                      src={order.orderItems[0].image}
-                      alt={order._id}
-                      className="w-[5rem] pt-4"
-                    />
-                  </td>
-                  <td>{order._id}</td>
-                  <td>{order.user ? order.user.username : "N/A"}</td>
-                  <td>
-                    {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
-                  </td>
-                  <td>$ {order.totalPrice}</td>
-                  <td className="py-2">
-                    {order.isPaid ? (
-                      <p className="p-1 text-center bg-green-400 w-[6rem] rounded-full">
-                        Completed
-                      </p>
-                    ) : (
-                      <p className="p-1 text-center bg-red-400 w-[6rem] rounded-full">
-                        Pending
-                      </p>
-                    )}
-                  </td>
-                  <td className="px-2 py-2">
-                    {order.isDelivered ? (
-                      <p className="p-1 text-center bg-green-400 w-[6rem] rounded-full">
-                        Completed
-                      </p>
-                    ) : (
-                      <p className="p-1 text-center bg-red-400 w-[6rem] rounded-full">
-                        Pending
-                      </p>
-                    )}
-                  </td>
-                  <td>
-                    <Link to={`/admin/order/${order._id}`}>
-                      <button>More</button>
-                    </Link>
-                  </td>
+              {orders.map((order) => {
+                const imageUrl = order.orderItems[0].image.startsWith("/uploads")
+                  ? `http://localhost:5000${order.orderItems[0].image.replace(/\\/g, "/")}`
+                  : order.orderItems[0].image;
+
+                return (
+                  <tr key={order._id}>
+                    <td>
+                      <img src={imageUrl} alt={order._id} className="w-[5rem] pt-4" />
+                    </td>
+                    <td>{order._id}</td>
+                    <td>{order.user ? order.user.username : "N/A"}</td>
+                    <td>
+                      {order.createdAt ? order.createdAt.substring(0, 10) : "N/A"}
+                    </td>
+                    <td>$ {order.totalPrice}</td>
+                    <td className="py-2">
+                      {order.isPaid ? (
+                        <p className="p-1 text-center bg-green-400 w-[6rem] rounded-full">
+                          Completed
+                        </p>
+                      ) : (
+                        <p className="p-1 text-center bg-red-400 w-[6rem] rounded-full">
+                          Pending
+                        </p>
+                      )}
+                    </td>
+                    <td className="px-2 py-2">
+                      {order.isDelivered ? (
+                        <p className="p-1 text-center bg-green-400 w-[6rem] rounded-full">
+                          Completed
+                        </p>
+                      ) : (
+                        <p className="p-1 text-center bg-red-400 w-[6rem] rounded-full">
+                          Pending
+                        </p>
+                      )}
+                    </td>
+                    <td>
+                      <Link to={`/admin/order/${order._id}`}>
+                        <button>More</button>
+                      </Link>
+                    </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </>

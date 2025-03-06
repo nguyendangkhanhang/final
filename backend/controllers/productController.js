@@ -3,35 +3,36 @@ import Product from "../models/productModel.js";
 
 const addProduct = asyncHandler(async (req, res) => {
   try {
-    const { name, description, price, category, quantity, brand } = req.fields;
-    // Validation
-    switch (true) {
-      case !name:
-        return res.json({ error: "Name is required" });
-      case !brand:
-        return res.json({ error: "Brand is required" });
-      case !description:
-        return res.json({ error: "Description is required" });
-      case !price:
-        return res.json({ error: "Price is required" });
-      case !category:
-        return res.json({ error: "Category is required" });
-      case !quantity:
-        return res.json({ error: "Quantity is required" });
+    let { name, description, price, category, subCategory, quantity, brand, size, image } = req.fields;
+
+    console.log("Received data:", req.fields); // Debug dữ liệu nhận từ frontend
+
+    // 🛠 Kiểm tra nếu `size` là chuỗi JSON, cần parse thành mảng
+    if (typeof size === "string") {
+      try {
+        size = JSON.parse(size); // Chuyển JSON string thành array
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid size format" });
+      }
     }
-    const product = new Product({ ...req.fields });
+
+    // 🛠 Đảm bảo `size` là mảng hợp lệ, không chứa `null`
+    if (!Array.isArray(size) || size.length === 0 || size.some(s => s === null || s === "")) {
+      return res.status(400).json({ error: "Size must be a non-empty array and cannot contain null values" });
+    }
+
+    const product = new Product({ name, description, price, category, subCategory, quantity, brand, size, image });
     await product.save();
     res.json(product);
-
   } catch (error) {
-    console.error(error);
+    console.error("Error saving product:", error);
     res.status(400).json(error.message);
   }
 });
 
 const updateProductDetails = asyncHandler(async (req, res) => {
   try {
-    const { name, description, price, category, quantity, brand } = req.fields;
+    let { name, description, price, category, subCategory, quantity, brand, size } = req.fields;
 
     // Validation
     switch (true) {
@@ -45,18 +46,21 @@ const updateProductDetails = asyncHandler(async (req, res) => {
         return res.json({ error: "Price is required" });
       case !category:
         return res.json({ error: "Category is required" });
+      case !subCategory:
+        return res.json({ error: "SubCategory is required" });
+      case !size || !Array.isArray(size):
+        return res.json({ error: "Size must be an array and is required" });
       case !quantity:
         return res.json({ error: "Quantity is required" });
     }
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { ...req.fields },
+      { name, description, price, category, subCategory, quantity, brand, size },
       { new: true }
     );
 
     await product.save();
-
     res.json(product);
   } catch (error) {
     console.error(error);
@@ -104,7 +108,9 @@ const fetchProducts = asyncHandler(async (req, res) => {
 
 const fetchProductById = asyncHandler(async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id)
+      .populate("category")
+      .populate("subCategory"); // Populate thêm subCategory
 
     if (product) {
       return res.json(product);
@@ -122,8 +128,9 @@ const fetchAllProducts = asyncHandler(async (req, res) => {
   try {
     const products = await Product.find({})
       .populate("category")
+      .populate("subCategory") // Populate thêm subCategory
       .limit(12)
-      .sort({ createAt: -1 });
+      .sort({ createdAt: -1 });
 
     res.json(products);
   } catch (error) {
@@ -138,32 +145,24 @@ const addProductReview = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      const alreadyReviewed = product.reviews.find(
-        (r) => r.user.toString() === req.user._id.toString()
-      );
-
-      if (alreadyReviewed) {
-        res.status(400);
-        throw new Error("Product already reviewed");
-      }
-
       const review = {
         name: req.user.username,
         rating: Number(rating),
         comment,
         user: req.user._id,
+        createdAt: new Date(), // Lưu thời gian review
       };
 
       product.reviews.push(review);
-
       product.numReviews = product.reviews.length;
 
+      // Tính toán lại rating trung bình
       product.rating =
         product.reviews.reduce((acc, item) => item.rating + acc, 0) /
         product.reviews.length;
 
       await product.save();
-      res.status(201).json({ message: "Review added" });
+      res.status(201).json({ message: "Review added successfully" });
     } else {
       res.status(404);
       throw new Error("Product not found");

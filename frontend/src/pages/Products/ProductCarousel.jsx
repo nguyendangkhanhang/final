@@ -51,7 +51,6 @@ const ProductCarousel = () => {
               numReviews,
               rating,
               quantity,
-              countInStock,
             }) => (
               <div key={_id}>
                 <img
@@ -93,10 +92,7 @@ const ProductCarousel = () => {
                         <FaShoppingCart className="mr-2 text-white" /> Quantity:{" "}
                         {quantity}
                       </h1>
-                      <h1 className="flex items-center mb-6">
-                        <FaBox className="mr-2 text-white" /> In Stock:{" "}
-                        {countInStock}
-                      </h1>
+
                     </div>
                   </div>
                 </div>

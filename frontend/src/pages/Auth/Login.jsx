@@ -40,72 +40,40 @@ const Login = () => {
       };
 
     return (
-        <div>
-          <section className="pl-[10rem] flex flex-wrap">
-            <div className="mr-[4rem] mt-[5rem]">
-              <h1 className="text-2xl font-semibold mb-4">Sign In</h1>   
-              <form onSubmit={submitHandler} className="container w-[40rem]">
-                <div className="my-[2rem]">
-                  <label
-                    htmlFor="email"
-                    className="block text-sm font-medium text-white"
-                  >
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="mt-1 p-2 border rounded w-full"
-                    placeholder="Enter email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-    
-                <div className="mb-4">
-                  <label
-                    htmlFor="password"
-                    className="block text-sm font-medium text-white"
-                  >
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    id="password"
-                    className="mt-1 p-2 border rounded w-full"
-                    placeholder="Enter password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                </div>
-    
-                <button
-                  disabled={isLoading}
-                  type="submit"
-                  className="bg-pink-500 text-white px-4 py-2 rounded cursor-pointer my-[1rem]"
-                >
-                  {isLoading ? "Signing In..." : "Sign In"}
-                </button>
-    
-                {isLoading && <Loader />}
-              </form>
-    
-              <div className="mt-4">
-                <p className="text-white">
-                  New Customer?{" "}
-                  <Link
-                    to={redirect ? `/register?redirect=${redirect}` : "/register"}
-                    className="text-pink-500 hover:underline"
-                  >
-                    Register
-                  </Link>
-                </p>
-              </div>
-            </div>
-          </section>
-        </div>
-      );
-    };
+      <form onSubmit={submitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800'>
+          <div className='inline-flex items-center gap-2 mb-2 mt-10'>
+              <hr className='border-none h-[1.5px] w-8 bg-gray-800' />
+              <p className='prata-regular text-3xl'>LOGIN</p>
+              <hr className='border-none h-[1.5px] w-8 bg-gray-800' />
+          </div>
+          <input 
+              onChange={(e) => setEmail(e.target.value)} 
+              value={email} 
+              type="email" 
+              className='w-full px-3 py-2 border border-gray-800' 
+              placeholder='Email' required
+          />
+          <input 
+              onChange={(e) => setPassword(e.target.value)} 
+              value={password} 
+              type="password" 
+              className='w-full px-3 py-2 border border-gray-800' 
+              placeholder='Password' required
+          />
+          <div className='w-full flex justify-between text-sm mt-[-8px]'>
+              <p className='cursor-pointer'>Forgot your password?</p>
+              <p>
+                New Customer? 
+                <Link to={redirect ? `/register?redirect=${redirect}` : "/register"} className='text-black hover:underline'> Register</Link>
+              </p>
+          </div>
+          <button disabled={isLoading} type="submit" className='bg-black text-white font-light px-8 py-2 mt-4'>
+              {isLoading ? "Signing In..." : "Sign In"}
+          </button>
+          {isLoading && <Loader />}
+      </form>
+    );
+};
     
 export default Login
 

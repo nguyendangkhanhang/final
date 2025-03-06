@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@paypal/react-paypal-js": "^8.8.2",
     "apexcharts": "^4.5.0",
     "axios": "^1.7.9",
     "moment": "^2.30.1",

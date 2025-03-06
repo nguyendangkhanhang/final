@@ -1,187 +1,135 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import {
   useGetProductDetailsQuery,
+  useGetTopProductsQuery,
   useCreateReviewMutation,
 } from "../../redux/api/productApiSlice";
 import Loader from "../../components/Loader";
 import Message from "../../components/Message";
-import {
-  FaBox,
-  FaClock,
-  FaShoppingCart,
-  FaStar,
-  FaStore,
-} from "react-icons/fa";
-import moment from "moment";
-import HeartIcon from "./HeartIcon";
 import Ratings from "./Rating";
 import ProductTabs from "./ProductTabs";
 import { addToCart } from "../../redux/features/cart/cartSlice";
+import SmallProduct from "./SmallProduct";
+import Title from '../../components/Title';
 
 const ProductDetails = () => {
-    const { id: productId } = useParams();
-    const navigate = useNavigate();
-    const dispatch = useDispatch();
-  
-    const [qty, setQty] = useState(1);
-    const [rating, setRating] = useState(0);
-    const [comment, setComment] = useState("");
-  
-    const {
-      data: product,
-      isLoading,
-      refetch,
-      error,
-    } = useGetProductDetailsQuery(productId);
-  
-    const { userInfo } = useSelector((state) => state.auth);
-  
-    const [createReview, { isLoading: loadingProductReview }] =
-      useCreateReviewMutation();
-  
-    const submitHandler = async (e) => {
-      e.preventDefault();
-  
-      try {
-        await createReview({
-          productId,
-          rating,
-          comment,
-        }).unwrap();
-        refetch();
-        toast.success("Review created successfully");
-      } catch (error) {
-        toast.error(error?.data || error.message);
-      }
-    };
-  
-    const addToCartHandler = () => {
-      dispatch(addToCart({ ...product, qty }));
-      navigate("/cart");
-    };
+  const { id: productId } = useParams();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
-  return (
-    <>
-      <div>
-        <Link
-          to="/"
-          className="text-white font-semibold hover:underline ml-[10rem]"
-        >
-          Go Back
-        </Link>
-      </div>
-      {isLoading ? (
-        <Loader />
-      ) : error ? (
-        <Message variant="danger">
-          {error?.data?.message || error.message}
-        </Message>
-      ) : (
-        <>
-          <div className="flex flex-wrap relative items-between mt-[2rem] ml-[10rem]">
-            <div>
-              <img
-                src={product.image}
-                alt={product.name}
-                className="w-full xl:w-[50rem] lg:w-[45rem] md:w-[30rem] sm:w-[20rem] mr-[2rem]"
-              />
+  const [qty, setQty] = useState(1);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const { data } = useGetTopProductsQuery();
 
-              <HeartIcon product={product} />
-            </div>
+  const {
+    data: product,
+    isLoading,
+    refetch,
+    error,
+  } = useGetProductDetailsQuery(productId);
 
-            <div className="flex flex-col justify-between">
-              <h2 className="text-2xl font-semibold">{product.name}</h2>
-              <p className="my-4 xl:w-[35rem] lg:w-[35rem] md:w-[30rem] text-[#B0B0B0]">
-                {product.description}
-              </p>
+  const { userInfo } = useSelector((state) => state.auth);
+  const [createReview, { isLoading: loadingProductReview }] =
+    useCreateReviewMutation();
 
-              <p className="text-5xl my-4 font-extrabold">$ {product.price}</p>
+  const submitHandler = async (e) => {
+    e.preventDefault();
+    try {
+      await createReview({
+        productId,
+        rating,
+        comment,
+      }).unwrap();
+      refetch();
+      toast.success("Review created successfully");
+    } catch (error) {
+      toast.error(error?.data || error.message);
+    }
+  };
 
-              <div className="flex items-center justify-between w-[20rem]">
-                <div className="one">
-                  <h1 className="flex items-center mb-6">
-                    <FaStore className="mr-2 text-white" /> Brand:{" "}
-                    {product.brand}
-                  </h1>
-                  <h1 className="flex items-center mb-6 w-[20rem]">
-                    <FaClock className="mr-2 text-white" /> Added:{" "}
-                    {moment(product.createAt).fromNow()}
-                  </h1>
-                  <h1 className="flex items-center mb-6">
-                    <FaStar className="mr-2 text-white" /> Reviews:{" "}
-                    {product.numReviews}
-                  </h1>
-                </div>
+  const addToCartHandler = () => {
+    if (!selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    dispatch(addToCart({ ...product, qty, selectedSize }));
+    navigate("/cart");
+  };
 
-                <div className="two">
-                  <h1 className="flex items-center mb-6">
-                    <FaStar className="mr-2 text-white" /> Ratings: {rating}
-                  </h1>
-                  <h1 className="flex items-center mb-6">
-                    <FaShoppingCart className="mr-2 text-white" /> Quantity:{" "}
-                    {product.quantity}
-                  </h1>
-                  <h1 className="flex items-center mb-6 w-[10rem]">
-                    <FaBox className="mr-2 text-white" /> In Stock:{" "}
-                    {product.countInStock}
-                  </h1>
-                </div>
-              </div>
-
-              <div className="flex justify-between flex-wrap">
-                <Ratings
-                  value={product.rating}
-                  text={`${product.numReviews} reviews`}
-                />
-
-                {product.countInStock > 0 && (
-                  <div>
-                    <select
-                      value={qty}
-                      onChange={(e) => setQty(e.target.value)}
-                      className="p-2 w-[6rem] rounded-lg text-black"
-                    >
-                      {[...Array(product.countInStock).keys()].map((x) => (
-                        <option key={x + 1} value={x + 1}>
-                          {x + 1}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
-
-              <div className="btn-container">
-                <button
-                  onClick={addToCartHandler}
-                  disabled={product.countInStock === 0}
-                  className="bg-pink-600 text-white py-2 px-4 rounded-lg mt-4 md:mt-0"
-                >
-                  Add To Cart
+  return isLoading ? (
+    <Loader />
+  ) : error ? (
+    <Message variant="danger">{error?.data?.message || error.message}</Message>
+  ) : (
+    <div className='pt-20 transition-opacity ease-in duration-500 opacity-100'>
+      <div className='flex gap-12 sm:gap-12 flex-col sm:flex-row'>
+        <div className='flex-1 flex flex-col-reverse gap-3 sm:flex-row'>
+          <div className='w-full sm:w-[70%] mx-auto ml-[10rem]'>
+            <img className='w-full h-auto' src={product.image} alt={product.name} />
+          </div>
+        </div>
+        <div className='flex-1'>
+          <h1 className='font-medium text-2xl mt-2'>{product.name}</h1>
+          <Ratings value={product.rating} text={`${product.numReviews} reviews`} />
+          <p className='mt-5 text-3xl font-medium'>$ {product.price}</p>
+          <p className='mt-5 text-gray-500 md:w-4/5'>{product.description}</p>
+          <div className='flex flex-col gap-4 my-8'>
+            <p>Select Size</p>
+            <div className='flex gap-2'>
+              {product.size?.map((size, index) => (
+                <button 
+                  key={index} 
+                  onClick={() => setSelectedSize(size)} 
+                  className={`border py-2 px-4 bg-gray-100 ${size === selectedSize ? 'border-orange-500' : ''}`}>
+                  {size}
                 </button>
-              </div>
-            </div>
-
-            <div className="mt-[5rem] container flex flex-wrap items-start justify-between ml-[10rem]">
-              <ProductTabs
-                loadingProductReview={loadingProductReview}
-                userInfo={userInfo}
-                submitHandler={submitHandler}
-                rating={rating}
-                setRating={setRating}
-                comment={comment}
-                setComment={setComment}
-                product={product}
-              />
+              ))}
             </div>
           </div>
-        </>
-      )}
-    </>
-  )
-}
+          <button onClick={addToCartHandler} className='bg-black text-white px-8 py-3 text-sm active:bg-gray-700 mt-4'>ADD TO CART</button>
+          <hr className='mt-8 sm:w-4/5' />
+          <div className='text-sm text-gray-500 mt-5 flex flex-col gap-1'>
+            <p>100% Original product.</p>
+            <p>Cash on delivery is available on this product.</p>
+            <p>Easy return and exchange policy within 7 days.</p>
+          </div>
+        </div>
+      </div>
+      <div className="container mx-auto px-4 mt-[5rem]">
+        <ProductTabs
+          loadingProductReview={loadingProductReview}
+          userInfo={userInfo}
+          submitHandler={submitHandler}
+          rating={rating}
+          setRating={setRating}
+          comment={comment}
+          setComment={setComment}
+          product={product}
+        />
+      </div>
 
-export default ProductDetails
+      <div className=' text-center text-3xl py-2 mt-[5rem]'>
+        <Title text1={'RELATED'} text2={"PRODUCTS"} />
+      </div>
+      <div className="ml-[20rem] flex flex-wrap">
+        {!data ? (
+          <Loader />
+          ) : (
+            data.map((product) => (
+              <div key={product._id}>
+                <SmallProduct product={product} />
+                </div>
+            ))
+        )}
+      </div>
+
+    </div>
+  );
+};
+
+export default ProductDetails;

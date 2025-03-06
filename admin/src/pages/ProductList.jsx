@@ -8,15 +8,18 @@ import { useFetchCategoriesQuery } from "@frontend/redux/api/categoryApiSlice";
 import { toast } from "react-toastify";
 import AdminMenu from "./AdminMenu";
 
+const sizesAvailable = ["S", "M", "L", "XL", "XXL"];
+
 const ProductList = () => {
   const [image, setImage] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
+  const [subCategory, setSubCategory] = useState("");
   const [quantity, setQuantity] = useState("");
   const [brand, setBrand] = useState("");
-  const [stock, setStock] = useState(0);
+  const [size, setSize] = useState([]);
   const [imageUrl, setImageUrl] = useState(null);
   const navigate = useNavigate();
 
@@ -24,8 +27,26 @@ const ProductList = () => {
   const [createProduct] = useCreateProductMutation();
   const { data: categories } = useFetchCategoriesQuery();
 
+  const handleSizeChange = (sizeValue) => {
+    setSize((prevSizes) =>
+      prevSizes.includes(sizeValue)
+        ? prevSizes.filter((s) => s !== sizeValue)
+        : [...prevSizes, sizeValue]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (size.length === 0) {
+      toast.error("Please select at least one size!");
+      return;
+    }
+
+    if (!image) {
+      toast.error("Please upload an image!");
+      return;
+    }
 
     try {
       const productData = new FormData();
@@ -34,21 +55,22 @@ const ProductList = () => {
       productData.append("description", description);
       productData.append("price", price);
       productData.append("category", category);
+      productData.append("subCategory", subCategory);
       productData.append("quantity", quantity);
       productData.append("brand", brand);
-      productData.append("countInStock", stock);
+      productData.append("size", JSON.stringify(size));
 
       const { data } = await createProduct(productData);
 
       if (data.error) {
-        toast.error("Product create failed. Try Again.");
+        toast.error("Product creation failed. Try again.");
       } else {
         toast.success(`${data.name} is created`);
         navigate("/");
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Product create failed. Try Again.");
+      console.error("Error creating product:", error);
+      toast.error("Product creation failed. Try again.");
     }
   };
 
@@ -59,8 +81,13 @@ const ProductList = () => {
     try {
       const res = await uploadProductImage(formData).unwrap();
       toast.success(res.message);
+
+      const fullImageUrl = res.image.startsWith("/uploads")
+        ? `http://localhost:5000${res.image.replace(/\\/g, "/")}`
+        : res.image;
+
       setImage(res.image);
-      setImageUrl(res.image);
+      setImageUrl(fullImageUrl);
     } catch (error) {
       toast.error(error?.data?.message || error.error);
     }
@@ -86,100 +113,60 @@ const ProductList = () => {
           <div className="mb-3">
             <label className="border text-white px-4 block w-full text-center rounded-lg cursor-pointer font-bold py-11">
               {image ? image.name : "Upload Image"}
-
               <input
                 type="file"
                 name="image"
                 accept="image/*"
                 onChange={uploadFileHandler}
-                className={!image ? "hidden" : "text-white"}
+                className="hidden"
               />
             </label>
           </div>
 
           <div className="p-3">
-            <div className="flex flex-wrap">
-              <div className="one">
-                <label htmlFor="name">Name</label> <br />
-                <input
-                  type="text"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-              <div className="two ml-10 ">
-                <label htmlFor="name block">Price</label> <br />
-                <input
-                  type="number"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex flex-wrap">
-              <div className="one">
-                <label htmlFor="name block">Quantity</label> <br />
-                <input
-                  type="number"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                />
-              </div>
-              <div className="two ml-10 ">
-                <label htmlFor="name block">Brand</label> <br />
-                <input
-                  type="text"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  value={brand}
-                  onChange={(e) => setBrand(e.target.value)}
-                />
-              </div>
-            </div>
+            <label>Name</label>
+            <input type="text" className="input-style" value={name} onChange={(e) => setName(e.target.value)} />
 
-            <label htmlFor="" className="my-5">
-              Description
-            </label>
-            <textarea
-              type="text"
-              className="p-2 mb-3 bg-[#101011] border rounded-lg w-[95%] text-white"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            ></textarea>
+            <label>Price</label>
+            <input type="number" className="input-style" value={price} onChange={(e) => setPrice(e.target.value)} />
 
-            <div className="flex justify-between">
-              <div>
-                <label htmlFor="name block">Count In Stock</label> <br />
-                <input
-                  type="text"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  value={stock}
-                  onChange={(e) => setStock(e.target.value)}
-                />
-              </div>
+            <label>Quantity</label>
+            <input type="number" className="input-style" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
 
-              <div>
-                <label htmlFor="">Category</label> <br />
-                <select
-                  placeholder="Choose Category"
-                  className="p-4 mb-3 w-[30rem] border rounded-lg bg-[#101011] text-white"
-                  onChange={(e) => setCategory(e.target.value)}
-                >
-                  {categories?.map((c) => (
-                    <option key={c._id} value={c._id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <label>Brand</label>
+            <input type="text" className="input-style" value={brand} onChange={(e) => setBrand(e.target.value)} />
+
+            <label>Description</label>
+            <textarea className="input-style" value={description} onChange={(e) => setDescription(e.target.value)} />
+
+            <label>Category</label>
+            <select className="input-style" onChange={(e) => setCategory(e.target.value)}>
+              {categories?.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+
+            <label>Sub Category</label>
+            <select className="input-style" onChange={(e) => setSubCategory(e.target.value)}>
+              <option value="Topwear">Topwear</option>
+              <option value="Bottomwear">Bottomwear</option>
+              <option value="Winterwear">Winterwear</option>
+            </select>
+
+            <label>Product Sizes</label>
+            <div className="flex gap-3">
+              {sizesAvailable.map((s) => (
+                <div key={s} onClick={() => handleSizeChange(s)}>
+                  <p className={`px-3 py-1 cursor-pointer ${size.includes(s) ? "bg-pink-100" : "bg-slate-200"}`}>
+                    {s}
+                  </p>
+                </div>
+              ))}
             </div>
 
-            <button
-              onClick={handleSubmit}
-              className="py-4 px-10 mt-5 rounded-lg text-lg font-bold bg-pink-600"
-            >
+            <button onClick={handleSubmit} className="submit-btn">
               Submit
             </button>
           </div>
