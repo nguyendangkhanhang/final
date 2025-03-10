@@ -189,6 +189,7 @@ const markOrderAsDelivered = async (req, res) => {
     if (order) {
       order.isDelivered = true;
       order.deliveredAt = Date.now();
+      order.status = "Delivered"; // Cập nhật trạng thái đơn hàng
 
       const updatedOrder = await order.save();
       res.json(updatedOrder);
@@ -198,6 +199,28 @@ const markOrderAsDelivered = async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+};
+
+
+const updateStatus = async (req, res) => {
+  try {
+    const { status } = req.body; // ✅ Lấy status từ body
+    const orderId = req.params.id; // ✅ Lấy orderId từ URL params
+
+    const order = await Order.findById(orderId); // ✅ Tìm order theo params
+
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    order.status = status;
+    const updatedOrder = await order.save();
+
+    res.json({ success: true, message: "Status Updated", order: updatedOrder });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 
@@ -211,4 +234,5 @@ export {
   findOrderById,
   markOrderAsPaid,
   markOrderAsDelivered,
+  updateStatus,
 };

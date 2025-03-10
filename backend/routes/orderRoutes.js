@@ -11,11 +11,13 @@ import {
   findOrderById,
   markOrderAsPaid,
   markOrderAsDelivered,
+  updateStatus,
 } from "../controllers/orderController.js";
 
 import { authenticate, authenticateAdmin } from "../middlewares/authMiddleware.js";
 
 router.route("/").post(authenticate, createOrder).get(authenticateAdmin, getAllOrders);
+router.route("/:id/status").put(authenticateAdmin, updateStatus);
 
 router.route("/mine").get(authenticate, getUserOrders);
 router.route("/total-orders").get(authenticateAdmin, countTotalOrders);

@@ -28,3 +28,32 @@ a.active hr{
         color: white;
     }
   }
+
+/* Màu trắng cho icon của trạng thái hiện tại */
+.img-white {
+  filter: invert(1) brightness(2);
+}
+
+/* Màu xanh lá #008001 cho icon của trạng thái đã hoàn thành */
+.img-green {
+  filter: invert(31%) sepia(98%) saturate(678%) hue-rotate(100deg) brightness(90%);
+}
+
+/* Màu xám cho icon của trạng thái chưa tới */
+.img-gray {
+  filter: grayscale(100%) brightness(60%);
+}
+
+
+/* Cập nhật viền và nền màu xanh lá #008001 */
+.border-green-custom {
+  border-color: #008001;
+}
+
+.bg-green-custom {
+  background-color: #008001;
+}
+
+.text-green-custom {
+  color: #008001;
+}

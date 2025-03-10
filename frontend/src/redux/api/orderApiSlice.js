@@ -9,12 +9,14 @@ export const orderApiSlice = apiSlice.injectEndpoints({
         method: "POST",
         body: order,
       }),
+      invalidatesTags: ["Orders"], // 🔄 Refetch sau khi tạo đơn hàng
     }),
 
     getOrderDetails: builder.query({
       query: (id) => ({
         url: `${ORDERS_URL}/${id}`,
       }),
+      providesTags: ["Orders"], // 🔄 Cập nhật chi tiết đơn hàng
     }),
 
     payOrder: builder.mutation({
@@ -23,6 +25,7 @@ export const orderApiSlice = apiSlice.injectEndpoints({
         method: "PUT",
         body: details,
       }),
+      invalidatesTags: ["Orders"], // 🔄 Cập nhật trạng thái thanh toán
     }),
 
     getPaypalClientId: builder.query({
@@ -32,16 +35,15 @@ export const orderApiSlice = apiSlice.injectEndpoints({
     }),
 
     getMyOrders: builder.query({
-      query: () => ({
-        url: `${ORDERS_URL}/mine`,
-      }),
-      keepUnusedDataFor: 5,
+      query: () => "/api/orders/mine",
+      providesTags: ["Orders"], // 🔄 Đảm bảo người dùng thấy trạng thái mới nhất
     }),
 
     getOrders: builder.query({
       query: () => ({
         url: ORDERS_URL,
       }),
+      providesTags: ["Orders"], // 🔄 Cập nhật danh sách đơn hàng cho admin
     }),
 
     deliverOrder: builder.mutation({
@@ -49,19 +51,32 @@ export const orderApiSlice = apiSlice.injectEndpoints({
         url: `${ORDERS_URL}/${orderId}/deliver`,
         method: "PUT",
       }),
+      invalidatesTags: ["Orders"], // 🔄 Cập nhật trạng thái giao hàng
     }),
 
     getTotalOrders: builder.query({
       query: () => `${ORDERS_URL}/total-orders`,
+      providesTags: ["Orders"], // 🔄 Cập nhật tổng số đơn hàng
     }),
 
     getTotalSales: builder.query({
       query: () => `${ORDERS_URL}/total-sales`,
+      providesTags: ["Orders"], // 🔄 Cập nhật doanh thu
     }),
 
     getTotalSalesByDate: builder.query({
       query: () => `${ORDERS_URL}/total-sales-by-date`,
+      providesTags: ["Orders"], // 🔄 Cập nhật doanh thu theo ngày
     }),
+
+    updateOrderStatus: builder.mutation({
+      query: ({ orderId, status }) => ({
+        url: `/api/orders/${orderId}/status`,
+        method: "PUT",
+        body: { status },
+      }),
+      invalidatesTags: ["Orders"], // ✅ Chỉ cần cái này là đủ để tự động cập nhật
+    }),      
   }),
 });
 
@@ -77,4 +92,5 @@ export const {
   useGetMyOrdersQuery,
   useDeliverOrderMutation,
   useGetOrdersQuery,
+  useUpdateOrderStatusMutation,
 } = orderApiSlice;

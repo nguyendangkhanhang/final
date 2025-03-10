@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./redux/features/auth/authSlice";
-import ChatboxApp from "./chatbox/ChatboxApp";
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -29,7 +28,6 @@ const App = () => {
       <Navigation />
       <main className="pt-[5rem] py-3">
         <Outlet />
-        <ChatboxApp /> {/* Hiển thị chatbox trên web chính */}
       </main>
       <Footer />
     </>
