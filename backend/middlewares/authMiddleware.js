@@ -3,7 +3,7 @@ import User from "../models/userModel.js";
 import asyncHandler from "./asyncHandler.js";
 
 const authenticate = asyncHandler(async (req, res, next) => {
-  let token = req.cookies.jwt || req.cookies.adminToken; // 🔥 Kiểm tra cả hai token
+  let token = req.cookies.jwt || req.headers.authorization?.split(" ")[1]; // ✅ Kiểm tra headers và cookie
 
   if (token) {
     try {

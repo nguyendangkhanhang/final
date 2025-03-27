@@ -49,7 +49,7 @@ const router = createBrowserRouter(
         <Route path="/placeorder" element={<PlaceOrder />} />
         <Route path="/order/:id" element={<Order />} />
         <Route path="/userorder" element={<UserOrder />} />
-        <Route path="/order/:id/track" element={<OrderTracking />} /> {/* ✅ Route tracking */}
+        <Route path="/order/:id/track" element={<OrderTracking />} />
       </Route>
     </Route>
   )

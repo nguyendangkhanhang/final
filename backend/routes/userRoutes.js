@@ -16,7 +16,7 @@ import { authenticate, authenticateAdmin } from "../middlewares/authMiddleware.j
 const router = express.Router();
 
 router.post("/register", createUser); // Đăng ký user
-router.post("/auth", loginUser); // Đăng nhập user (Không cho admin vào)
+router.post("/auth", loginUser); // Đăng nhập user
 router.post("/logout", logoutCurrentUser); // Đăng xuất
 router.route("/profile").get(authenticate, getCurrentUserProfile).put(authenticate, updateCurrentUserProfile);
 

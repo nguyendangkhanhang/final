@@ -209,6 +209,26 @@ const filterProducts = asyncHandler(async (req, res) => {
   }
 });
 
+// const getProductRecommendations = async (req, res) => {
+//   try {
+//     const { query } = req.body;  // Query từ khách hàng (ví dụ: tìm "t-shirt", "laptop", v.v.)
+    
+//     const products = await Product.find({
+//       name: { $regex: query, $options: "i" },  // Tìm kiếm theo tên sản phẩm
+//     });
+
+//     if (products.length === 0) {
+//       return res.status(404).json({ error: "No products found matching your request." });
+//     }
+
+//     const productNames = products.map(product => product.name).join(", ");
+//     res.json({ message: `We recommend these products: ${productNames}` });
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
+
 export {
   addProduct,
   updateProductDetails,
@@ -220,4 +240,5 @@ export {
   fetchTopProducts,
   fetchNewProducts,
   filterProducts,
+  // getProductRecommendations,
 };

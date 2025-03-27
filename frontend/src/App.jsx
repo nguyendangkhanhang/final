@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setCredentials } from "./redux/features/auth/authSlice";
+import Chatbot from './components/chatbot/Chatbot'; 
 
 const App = () => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
@@ -30,6 +31,7 @@ const App = () => {
         <Outlet />
       </main>
       <Footer />
+      <Chatbot />
     </>
   );
 };

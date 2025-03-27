@@ -30,9 +30,9 @@ const createOrder = async (req, res) => {
   try {
     const { orderItems, shippingAddress, paymentMethod } = req.body;
 
-    if (orderItems && orderItems.length === 0) {
+    if (!orderItems || orderItems.length === 0) {
       res.status(400);
-      throw new Error("No order items");
+      throw new Error("No order items found.");
     }
 
     const itemsFromDB = await Product.find({
@@ -40,19 +40,27 @@ const createOrder = async (req, res) => {
     });
 
     const dbOrderItems = orderItems.map((itemFromClient) => {
-      const matchingItemFromDB = itemsFromDB.find(
-        (itemFromDB) => itemFromDB._id.toString() === itemFromClient._id
+      const product = itemsFromDB.find(
+        (p) => p._id.toString() === itemFromClient._id
       );
 
-      if (!matchingItemFromDB) {
+      if (!product) {
         res.status(404);
         throw new Error(`Product not found: ${itemFromClient._id}`);
+      }
+
+      // ❗ Check stock availability
+      if (itemFromClient.qty > product.quantity) {
+        res.status(400);
+        throw new Error(
+          `The product "${product.name}" has only ${product.quantity} left in stock.`
+        );
       }
 
       return {
         ...itemFromClient,
         product: itemFromClient._id,
-        price: matchingItemFromDB.price,
+        price: product.price,
         _id: undefined,
       };
     });
@@ -72,6 +80,16 @@ const createOrder = async (req, res) => {
     });
 
     const createdOrder = await order.save();
+
+    // ✅ Reduce product stock after creating order
+    for (const item of dbOrderItems) {
+      const product = await Product.findById(item.product);
+      if (product) {
+        product.quantity -= item.qty;
+        await product.save();
+      }
+    }
+
     res.status(201).json(createdOrder);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -224,6 +242,22 @@ const updateStatus = async (req, res) => {
   }
 };
 
+// const getOrderStatusById = async (req, res) => {
+//   try {
+//     const orderId = req.params.id;
+//     const order = await Order.findById(orderId);
+
+//     if (order) {
+//       res.json({ status: order.status, message: `Order status for ${orderId}: ${order.status}` });
+//     } else {
+//       res.status(404);
+//       throw new Error("Order not found");
+//     }
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// };
+
 export {
   createOrder,
   getAllOrders,
@@ -235,4 +269,5 @@ export {
   markOrderAsPaid,
   markOrderAsDelivered,
   updateStatus,
+  // getOrderStatusById,
 };

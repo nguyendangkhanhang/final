@@ -11,6 +11,8 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import paypalRoutes from "./routes/paypalRoutes.js";
+
 import cors from 'cors';
 
 dotenv.config();
@@ -20,7 +22,10 @@ connectDB();
 
 const app = express();
 
-app.use(cors()); 
+app.use(cors({
+  origin: "*", // Cho phép mọi nguồn truy cập (có thể thay bằng frontend URL)
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -30,6 +35,7 @@ app.use("/api/category", categoryRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/paypal", paypalRoutes);
 
 app.get("/api/config/paypal", (req, res) => {
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID });

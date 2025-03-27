@@ -52,27 +52,27 @@ const Home = () => {
 
           <div className="mt-[3rem] px-[5rem] grid grid-cols-3 gap-6 items-start">
           {/* Cột đầu tiên: Tiêu đề + Hình ảnh nhỏ */}
-          <div className="flex flex-col w-full ml-[7rem]">
-            {/* Tiêu đề nằm trên ảnh */}
-            <h2 className="text-3xl font-bold uppercase tracking-wide text-gray-700 mb-2">
-              New <br /> Collections
-            </h2>
-            <div className="w-[412.4px] h-[1px] bg-gray-700 mb-7"></div> 
-            
-            {/* Ảnh nhỏ hơn */}
-            <img
-              src={assets.block_home_category1}
-              alt="Collection 1"
-              className="w-[412.4px] h-[618px] object-cover"
-            />
-          </div>
+            <div className="flex flex-col w-full ml-[7rem]">
+              {/* Tiêu đề nằm trên ảnh */}
+              <h2 className="text-3xl font-bold uppercase tracking-wide text-gray-700 mb-2">
+                New <br /> Collections
+              </h2>
+              <div className="w-[412.4px] h-[1px] bg-gray-700 mb-7"></div> 
+              
+              {/* Ảnh nhỏ hơn */}
+              <img
+                src={assets.block_home_category1}
+                alt="Collection 1"
+                className="w-[412.4px] h-[618px] object-cover"
+              />
+            </div>
 
-          {/* Hai ảnh lớn hơn */}
-          <div className="col-span-2 grid grid-cols-2 gap-6 ml-[2rem] mr-[3rem]">
-            <img src={assets.block_home_category2} alt="Collection 2" className="w-[600px] h-[780px] object-cover " />
-            <img src={assets.block_home_category3} alt="Collection 3" className="w-[600px] h-[780px] object-cover" />
+            {/* Hai ảnh lớn hơn */}
+            <div className="col-span-2 grid grid-cols-2 gap-6 ml-[2rem] mr-[3rem]">
+              <img src={assets.block_home_category2} alt="Collection 2" className="w-[600px] h-[780px] object-cover " />
+              <img src={assets.block_home_category3} alt="Collection 3" className="w-[600px] h-[780px] object-cover" />
+            </div>
           </div>
-        </div>
         </>
       )}
     </>
