@@ -21,7 +21,7 @@ const Header = () => {
             <div className="grid grid-cols-2">
               {data.map((product) => (
                 <div key={product._id}>
-                  <SmallProduct product={product} />
+                  {/* <SmallProduct product={product} /> */}
                 </div>
               ))}
             </div>

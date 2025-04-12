@@ -16,7 +16,6 @@ const ProductList = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [subCategory, setSubCategory] = useState("");
   const [quantity, setQuantity] = useState("");
   const [brand, setBrand] = useState("");
   const [size, setSize] = useState([]);
@@ -55,7 +54,6 @@ const ProductList = () => {
       productData.append("description", description);
       productData.append("price", price);
       productData.append("category", category);
-      productData.append("subCategory", subCategory);
       productData.append("quantity", quantity);
       productData.append("brand", brand);
       productData.append("size", JSON.stringify(size));
@@ -94,81 +92,162 @@ const ProductList = () => {
   };
 
   return (
-    <div className="container xl:mx-[9rem] sm:mx-[0]">
-      <div className="flex flex-col md:flex-row">
-        <AdminMenu />
-        <div className="md:w-3/4 p-3">
-          <div className="h-12">Create Product</div>
+    <div className="min-h-screen ">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex flex-col lg:flex-row gap-8">
+            <AdminMenu />
 
-          {imageUrl && (
-            <div className="text-center">
-              <img
-                src={imageUrl}
-                alt="product"
-                className="block mx-auto max-h-[200px]"
-              />
-            </div>
-          )}
+          {/* Main Content */}
+          <div className="flex-1 mt-[-40px]">
+            <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-6">
+              <h1 className="text-2xl font-bold text-gray-800 mb-6">Create New Product</h1>
 
-          <div className="mb-3">
-            <label className="border text-white px-4 block w-full text-center rounded-lg cursor-pointer font-bold py-11">
-              {image ? image.name : "Upload Image"}
-              <input
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={uploadFileHandler}
-                className="hidden"
-              />
-            </label>
-          </div>
-
-          <div className="p-3">
-            <label>Name</label>
-            <input type="text" className="input-style" value={name} onChange={(e) => setName(e.target.value)} />
-
-            <label>Price</label>
-            <input type="number" className="input-style" value={price} onChange={(e) => setPrice(e.target.value)} />
-
-            <label>Quantity</label>
-            <input type="number" className="input-style" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
-
-            <label>Brand</label>
-            <input type="text" className="input-style" value={brand} onChange={(e) => setBrand(e.target.value)} />
-
-            <label>Description</label>
-            <textarea className="input-style" value={description} onChange={(e) => setDescription(e.target.value)} />
-
-            <label>Category</label>
-            <select className="input-style" onChange={(e) => setCategory(e.target.value)}>
-              {categories?.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-
-            <label>Sub Category</label>
-            <select className="input-style" onChange={(e) => setSubCategory(e.target.value)}>
-              <option value="Topwear">Topwear</option>
-              <option value="Bottomwear">Bottomwear</option>
-              <option value="Winterwear">Winterwear</option>
-            </select>
-
-            <label>Product Sizes</label>
-            <div className="flex gap-3">
-              {sizesAvailable.map((s) => (
-                <div key={s} onClick={() => handleSizeChange(s)}>
-                  <p className={`px-3 py-1 cursor-pointer ${size.includes(s) ? "bg-pink-100" : "bg-slate-200"}`}>
-                    {s}
-                  </p>
+              {/* Image Upload Section */}
+              <div className="mb-6">
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  {imageUrl ? (
+                    <div className="mb-4">
+                      <img
+                        src={imageUrl}
+                        alt="product preview"
+                        className="mx-auto max-h-[200px] rounded-lg shadow-md"
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 mb-4">
+                      <svg className="mx-auto h-12 w-12" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                        <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <p className="mt-1">Drag and drop an image here or click to select</p>
+                    </div>
+                  )}
+                  <label className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
+                    {image ? image.name : "Choose Image"}
+                    <input
+                      type="file"
+                      name="image"
+                      accept="image/*"
+                      onChange={uploadFileHandler}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
-              ))}
-            </div>
+              </div>
 
-            <button onClick={handleSubmit} className="submit-btn">
-              Submit
-            </button>
+              {/* Product Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Product Name</label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Price</label>
+                      <input
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Quantity</label>
+                      <input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Brand</label>
+                      <input
+                        type="text"
+                        value={brand}
+                        onChange={(e) => setBrand(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category and Size Information */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Category</label>
+                      <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="">Select category</option>
+                        {categories?.map((c) => (
+                          <option key={c._id} value={c._id}>
+                            {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sizes</label>
+                      <div className="flex flex-wrap gap-2">
+                        {sizesAvailable.map((s) => (
+                          <button
+                            key={s}
+                            type="button"
+                            onClick={() => handleSizeChange(s)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                              size.includes(s)
+                                ? "bg-blue-500 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Description</label>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows="4"
+                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <div className="flex justify-end">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    Create Product
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>

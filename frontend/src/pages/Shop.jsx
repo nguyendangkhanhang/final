@@ -83,14 +83,14 @@ const Shop = () => {
         <div className="container mx-auto">
             <div className="flex md:flex-row">
                 {/* Sidebar */}
-                <div className="w-100 p-4">
+                <div className="w-[600px] p-4">
                     {/* Tiêu đề "FILTERS" */}
                     <h2 className="mb-4 mt-5 text-xl flex items-center gap-2">FILTERS</h2>
                     {/* Filter theo Categories */}
-                    <div className="border border-gray-300 p-4 mb-4">
+                    <div className="border border-gray-300 p-4 mb-4 w-full">
                         <h3 className="text-md font-medium mb-2">CATEGORIES</h3>
                         {categories?.map((c) => (
-                            <div key={c._id} className="flex items-center mb-2">
+                            <div key={c._id} className="flex items-center mb-2 whitespace-nowrap">
                                 <input
                                     type="checkbox"
                                     id={`category-${c._id}`}
@@ -105,10 +105,10 @@ const Shop = () => {
                     </div>
 
                     {/* Filter theo Brand */}
-                    <div className="border border-gray-300 p-4 mb-4">
+                    <div className="border border-gray-300 p-4 mb-4 w-full">
                         <h3 className="text-md font-medium mb-2">BRAND</h3>
                         {uniqueBrands?.map((brand, index) => (
-                            <div key={index} className="flex items-center mb-2">
+                            <div key={index} className="flex items-center mb-2 whitespace-nowrap">
                                 <input
                                     type="checkbox"
                                     id={`brand-${index}`}
@@ -124,7 +124,7 @@ const Shop = () => {
                     </div>
 
                     {/* Filter theo Price */}
-                    <div className="border border-gray-300 p-4">
+                    <div className="border border-gray-300 p-4 w-full">
                         <h3 className="text-md font-medium mb-2">PRICE</h3>
                         <input
                             type="text"

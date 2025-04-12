@@ -3,7 +3,7 @@ import Product from "../models/productModel.js";
 
 const addProduct = asyncHandler(async (req, res) => {
   try {
-    let { name, description, price, category, subCategory, quantity, brand, size, image } = req.fields;
+    let { name, description, price, category, quantity, brand, size, image } = req.fields;
 
     console.log("Received data:", req.fields); // Debug dữ liệu nhận từ frontend
 
@@ -34,7 +34,16 @@ const updateProductDetails = asyncHandler(async (req, res) => {
   try {
     let { name, description, price, category, subCategory, quantity, brand, size } = req.fields;
 
-    // Validation
+    // 🛠 Parse size nếu là JSON string
+    if (typeof size === "string") {
+      try {
+        size = JSON.parse(size);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid size format" });
+      }
+    }
+
+    // ✅ Validate lại
     switch (true) {
       case !name:
         return res.json({ error: "Name is required" });
@@ -46,8 +55,6 @@ const updateProductDetails = asyncHandler(async (req, res) => {
         return res.json({ error: "Price is required" });
       case !category:
         return res.json({ error: "Category is required" });
-      case !subCategory:
-        return res.json({ error: "SubCategory is required" });
       case !size || !Array.isArray(size):
         return res.json({ error: "Size must be an array and is required" });
       case !quantity:
@@ -56,7 +63,7 @@ const updateProductDetails = asyncHandler(async (req, res) => {
 
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, price, category, subCategory, quantity, brand, size },
+      { name, description, price, category, quantity, brand, size },
       { new: true }
     );
 
@@ -67,6 +74,7 @@ const updateProductDetails = asyncHandler(async (req, res) => {
     res.status(400).json(error.message);
   }
 });
+
 
 const removeProduct = asyncHandler(async (req, res) => {
   try {

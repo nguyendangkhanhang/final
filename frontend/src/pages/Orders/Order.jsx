@@ -3,7 +3,7 @@ import { Link, useParams } from "react-router-dom";
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import Messsage from "../../components/Message";
+import Message from "../../components/Message";
 import Loader from "../../components/Loader";
 import {
   useDeliverOrderMutation,
@@ -14,7 +14,6 @@ import {
 
 const Order = () => {
   const { id: orderId } = useParams();
-
   const {
     data: order,
     refetch,
@@ -23,21 +22,19 @@ const Order = () => {
   } = useGetOrderDetailsQuery(orderId);
 
   const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
-  const [deliverOrder, { isLoading: loadingDeliver }] =
-    useDeliverOrderMutation();
+  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
   const { userInfo } = useSelector((state) => state.auth);
 
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
-
   const {
     data: paypal,
-    isLoading: loadingPaPal,
+    isLoading: loadingPayPal,
     error: errorPayPal,
   } = useGetPaypalClientIdQuery();
 
   useEffect(() => {
-    if (!errorPayPal && !loadingPaPal && paypal.clientId) {
-      const loadingPaPalScript = async () => {
+    if (!errorPayPal && !loadingPayPal && paypal?.clientId) {
+      const loadingPayPalScript = async () => {
         paypalDispatch({
           type: "resetOptions",
           value: {
@@ -50,11 +47,11 @@ const Order = () => {
 
       if (order && !order.isPaid) {
         if (!window.paypal) {
-          loadingPaPalScript();
+          loadingPayPalScript();
         }
       }
     }
-  }, [errorPayPal, loadingPaPal, order, paypal, paypalDispatch]);
+  }, [errorPayPal, loadingPayPal, order, paypal, paypalDispatch]);
 
   function onApprove(data, actions) {
     return actions.order.capture().then(async function (details) {
@@ -90,138 +87,178 @@ const Order = () => {
   return isLoading ? (
     <Loader />
   ) : error ? (
-    <Messsage variant="danger">{error.data.message}</Messsage>
+    <Message variant="danger">{error.data.message}</Message>
   ) : (
-    <div className="container flex flex-col ml-[10rem] md:flex-row">
-      <div className="md:w-2/3 pr-4">
-        <div className="border gray-300 mt-5 pb-4 mb-5">
-          {order.orderItems.length === 0 ? (
-            <Messsage>Order is empty</Messsage>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-[80%]">
-                <thead className="border-b-2">
-                  <tr>
-                    <th className="p-2">Image</th>
-                    <th className="p-2">Product</th>
-                    <th className="p-2 text-center">Quantity</th>
-                    <th className="p-2">Unit Price</th>
-                    <th className="p-2">Total</th>
-                  </tr>
-                </thead>
+    <div className="min-h-screen bg-gray-50 py-12 text-2xl leading-relaxed">
+      <div className="max-w-[1400px] mx-auto px-6">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
+          <p className="mt-2 text-sm text-gray-600">Order ID: {order._id}</p>
+        </div>
 
-                <tbody>
-                  {order.orderItems.map((item, index) => (
-                    <tr key={index}>
-                      <td className="p-2">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="w-16 h-16 object-cover"
-                        />
-                      </td>
-
-                      <td className="p-2">
-                        <Link to={`/product/${item.product}`}>{item.name}</Link>
-                      </td>
-
-                      <td className="p-2 text-center">{item.qty}</td>
-                      <td className="p-2 text-center">{item.price}</td>
-                      <td className="p-2 text-center">
-                        $ {(item.qty * item.price).toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content - Order Items */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Order Items */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-900">Order Items</h2>
+              </div>
+              {order.orderItems.length === 0 ? (
+                <div className="p-6">
+                  <Message>Order is empty</Message>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                        <th scope="col" className="px-6 py-3 text-left text-base font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {order.orderItems.map((item, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="flex-shrink-0 h-16 w-16">
+                                <img
+                                  src={item.image.startsWith("/uploads") 
+                                    ? `http://localhost:5000${item.image}` 
+                                    : item.image}
+                                  alt={item.name}
+                                  className="h-16 w-16 object-cover rounded"
+                                />
+                              </div>
+                              <div className="ml-4">
+                                <Link 
+                                  to={`/product/${item.product}`}
+                                  className="text-base font-medium text-gray-900 hover:text-blue-600"
+                                >
+                                  {item.name}
+                                </Link>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
+                            {item.qty}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-base text-gray-500">
+                            ${item.price.toFixed(2)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-base font-medium text-gray-900">
+                            ${(item.qty * item.price).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
 
-      <div className="md:w-1/3">
-        <div className="mt-5 border-gray-300 pb-4 mb-4">
-          <h2 className="text-xl font-bold mb-2">Shipping</h2>
-          <p className="mb-4 mt-4">
-            <strong className="text-pink-500">Order:</strong> {order._id}
-          </p>
-
-          <p className="mb-4">
-            <strong className="text-pink-500">Name:</strong>{" "}
-            {order.user.username}
-          </p>
-
-          <p className="mb-4">
-            <strong className="text-pink-500">Email:</strong> {order.user.email}
-          </p>
-
-          <p className="mb-4">
-            <strong className="text-pink-500">Address:</strong>{" "}
-            {order.shippingAddress.address}, {order.shippingAddress.city}{" "}
-            {order.shippingAddress.postalCode}, {order.shippingAddress.country}
-          </p>
-
-          <p className="mb-4">
-            <strong className="text-pink-500">Method:</strong>{" "}
-            {order.paymentMethod}
-          </p>
-
-          {order.isPaid ? (
-            <Messsage variant="success">Paid on {order.paidAt}</Messsage>
-          ) : (
-            <Messsage variant="danger">Not paid</Messsage>
-          )}
-        </div>
-
-        <h2 className="text-xl font-bold mb-2 mt-[3rem]">Order Summary</h2>
-        <div className="flex justify-between mb-2">
-          <span>Items</span>
-          <span>$ {order.itemsPrice}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span>Shipping</span>
-          <span>$ {order.shippingPrice}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span>Tax</span>
-          <span>$ {order.taxPrice}</span>
-        </div>
-        <div className="flex justify-between mb-2">
-          <span>Total</span>
-          <span>$ {order.totalPrice}</span>
-        </div>
-
-        {!order.isPaid && (
-          <div>
-            {loadingPay && <Loader />}{" "}
-            {isPending ? (
-              <Loader />
-            ) : (
-              <div>
+            {/* Shipping Information */}
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-900">Shipping Information</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <PayPalButtons
-                    createOrder={createOrder}
-                    onApprove={onApprove}
-                    onError={onError}
-                  ></PayPalButtons>
+                  <h3 className="text-lg font-medium text-gray-500">Shipping Address</h3>
+                  <p className="mt-2 text-base text-gray-900">
+                    {order.shippingAddress.address}<br />
+                    {order.shippingAddress.city}, {order.shippingAddress.postalCode}<br />
+                    {order.shippingAddress.country}
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-lg font-medium text-gray-500">Customer Details</h3>
+                  <p className="mt-2 text-base text-gray-900">
+                    {order.user.username}<br />
+                    {order.user.email}
+                  </p>
                 </div>
               </div>
-            )}
+            </div>
           </div>
-        )}
 
-        {/* {loadingDeliver && <Loader />}
-        {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
-          <div>
-            <button
-              type="button"
-              className="bg-pink-500 text-white w-full py-2"
-              onClick={deliverHandler}
-            >
-              Mark As Delivered
-            </button>
+          {/* Sidebar - Order Summary */}
+          <div className="lg:col-span-1 space-y-6">
+            <div className="bg-white rounded-lg shadow overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-2xl font-semibold text-gray-900">Order Summary</h2>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-600">Items Total</span>
+                  <span className="text-gray-900 font-medium">${order.itemsPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-600">Shipping</span>
+                  <span className="text-gray-900 font-medium">${order.shippingPrice.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between text-base">
+                  <span className="text-gray-600">Tax</span>
+                  <span className="text-gray-900 font-medium">${order.taxPrice.toFixed(2)}</span>
+                </div>
+                <div className="pt-4 border-t border-gray-200">
+                  <div className="flex justify-between">
+                    <span className="text-2xl font-medium text-gray-900">Total</span>
+                    <span className="text-2xl font-bold text-gray-900">${order.totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-6 space-y-4">
+                  <div className="rounded-md bg-gray-50 p-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-base font-medium text-gray-900">Payment Status</span>
+                      {order.isPaid ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                          Paid on {new Date(order.paidAt).toLocaleDateString()}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-red-100 text-red-800">
+                          Not Paid
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {!order.isPaid && (
+                    <div className="space-y-4">
+                      {loadingPay && <Loader />}
+                      {isPending ? (
+                        <Loader />
+                      ) : (
+                        <div className="rounded-md shadow-sm">
+                          <PayPalButtons
+                            createOrder={createOrder}
+                            onApprove={onApprove}
+                            onError={onError}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {loadingDeliver && <Loader />}
+                  {userInfo && userInfo.isAdmin && order.isPaid && !order.isDelivered && (
+                    <button
+                      type="button"
+                      className="w-full flex justify-center py-3 px-6 text-base border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      onClick={deliverHandler}
+                    >
+                      Mark As Delivered
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        )} */}
+        </div>
       </div>
     </div>
   );
