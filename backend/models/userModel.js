@@ -15,7 +15,15 @@ const userSchema = mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: function() {
+        return !this.googleId; // Nếu không phải login bằng Google thì bắt buộc
+      }
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true // Cho phép null và unique chỉ áp dụng cho non-null values
     },
 
     isAdmin: {

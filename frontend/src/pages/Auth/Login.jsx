@@ -5,6 +5,7 @@ import { useLoginMutation } from "../../redux/api/usersApiSlice";
 import { setCredentials } from "../../redux/features/auth/authSlice";
 import { toast } from "react-toastify";
 import Loader from "../../components/Loader";
+import { GoogleLogin } from "@react-oauth/google";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -39,6 +40,43 @@ const Login = () => {
         }
       };
 
+      const handleSuccess = async (credentialResponse) => {
+        try {
+          const res = await fetch(`${import.meta.env.VITE_BACKEND_API_URL}/api/auth/google`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ token: credentialResponse.credential }),
+          });
+      
+          const data = await res.json();
+      
+          if (!res.ok) {
+            throw new Error(data.message || "Google login failed");
+          }
+      
+          const user = data.user;
+      
+          // Chặn admin như login thường
+          if (user.isAdmin) {
+            toast.error("You are not authorized to access this application");
+            return;
+          }
+      
+          dispatch(setCredentials(user)); // Dispatch login giống login thường
+          navigate("/");
+          toast.success("Login successful");
+        } catch (err) {
+          toast.error(err.message || "Google login failed");
+        }
+      };
+      
+
+      const handleError = () => {
+        console.log("Login Failed");
+      };
+
     return (
       <form onSubmit={submitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800'>
           <div className='inline-flex items-center gap-2 mb-2 mt-10'>
@@ -70,6 +108,10 @@ const Login = () => {
           <button disabled={isLoading} type="submit" className='bg-black text-white font-light px-8 py-2 mt-4'>
               {isLoading ? "Signing In..." : "Sign In"}
           </button>
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={handleError}
+          />
           {isLoading && <Loader />}
       </form>
     );

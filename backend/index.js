@@ -13,6 +13,7 @@ import uploadRoutes from "./routes/uploadRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
 import paypalRoutes from "./routes/paypalRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
+import authRoutes from './routes/authRoutes.js';
 
 import cors from 'cors';
 
@@ -24,7 +25,7 @@ connectDB();
 const app = express();
 
 app.use(cors({
-  origin: "*", // Cho phép mọi nguồn truy cập (có thể thay bằng frontend URL)
+  origin: (origin, callback) => callback(null, origin), 
   credentials: true
 }));
 app.use(express.json());
@@ -38,6 +39,7 @@ app.use("/api/upload", uploadRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/chatbot", chatbotRoutes);
+app.use("/api/auth", authRoutes);
 
 app.get("/api/config/paypal", (req, res) => {
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID });
