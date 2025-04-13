@@ -6,45 +6,64 @@ import Message from "../../components/Message";
 import ProgressSteps from "../../components/ProgressSteps";
 import Loader from "../../components/Loader";
 import { useCreateOrderMutation } from "../../redux/api/orderApiSlice";
+import { useMarkCouponAsUsedMutation } from "../../redux/api/userCouponApiSlice";
 import { clearCartItems } from "../../redux/features/cart/cartSlice";
 import { FaBox, FaCreditCard, FaMapMarkerAlt } from "react-icons/fa";
+import {
+  formatPrice,
+  calculateDiscount,
+} from "../../Utils/cartUtils";
 
 const PlaceOrder = () => {
   const navigate = useNavigate();
   const cart = useSelector((state) => state.cart);
   const [createOrder, { isLoading, error }] = useCreateOrderMutation();
+  const [markCouponAsUsed] = useMarkCouponAsUsedMutation();
   const dispatch = useDispatch();
 
   useEffect(() => {
     if (!cart.shippingAddress.address) {
       navigate("/shipping");
     }
-  }, [cart.paymentMethod, cart.shippingAddress.address, navigate]);
+  }, [cart.shippingAddress.address, navigate]);
+
+  // 🧠 Tính toán lại để hiển thị đúng
+  const subtotal = cart.itemsPrice;
+  const discountAmount = calculateDiscount(subtotal, cart.discount);
+  const shipping = cart.shippingPrice;
+  const finalTotal = subtotal - discountAmount + shipping;
 
   const placeOrderHandler = async () => {
     try {
       const res = await createOrder({
-        orderItems: cart.cartItems.map(item => ({
+        orderItems: cart.cartItems.map((item) => ({
           ...item,
           image: Array.isArray(item.image) ? item.image[0] : item.image,
         })),
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
-        itemsPrice: Number(cart.itemsPrice),
-        shippingPrice: Number(cart.shippingPrice),
+        itemsPrice: Number(subtotal),
+        shippingPrice: Number(shipping),
         taxPrice: Number(cart.taxPrice),
-        totalPrice: Number(cart.totalPrice),
+        totalPrice: Number(finalTotal),
+        couponId: cart.discount?.couponId,
+        discountPercentage: cart.discount?.discountPercentage || 0,
       }).unwrap();
+
+      // Nếu có sử dụng mã giảm giá, đánh dấu là đã sử dụng
+      if (cart.discount?.couponId) {
+        try {
+          await markCouponAsUsed(cart.discount.couponId).unwrap();
+        } catch (error) {
+          console.error('Lỗi khi đánh dấu mã giảm giá:', error);
+        }
+      }
+
       dispatch(clearCartItems());
       navigate(`/order/${res._id}`);
     } catch (error) {
       toast.error(error);
     }
-  };
-
-  // Format price helper function
-  const formatPrice = (price) => {
-    return Number(price).toFixed(2);
   };
 
   return (
@@ -85,16 +104,21 @@ const PlaceOrder = () => {
                                 className="w-16 h-16 object-cover rounded-md"
                               />
                               <div className="ml-4">
-                                <Link to={`/product/${item.product}`} className="text-sm font-medium text-gray-900 hover:text-blue-600">
+                                <Link
+                                  to={`/product/${item.product}`}
+                                  className="text-sm font-medium text-gray-900 hover:text-blue-600"
+                                >
                                   {item.name}
                                 </Link>
                               </div>
                             </div>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-500">{item.qty}</td>
-                          <td className="px-6 py-4 text-sm text-gray-500">${formatPrice(item.price)}</td>
+                          <td className="px-6 py-4 text-sm text-gray-500">
+                            {formatPrice(item.price)}
+                          </td>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            ${formatPrice(item.qty * item.price)}
+                            {formatPrice(item.qty * item.price)}
                           </td>
                         </tr>
                       ))}
@@ -110,26 +134,30 @@ const PlaceOrder = () => {
                 <div className="p-6 border-b border-gray-200">
                   <h2 className="text-xl font-semibold text-gray-800">Order Summary</h2>
                 </div>
-                
+
                 <div className="p-6 space-y-6">
                   {/* Price Summary */}
                   <div className="space-y-3">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Items Subtotal</span>
-                      <span className="font-medium">${formatPrice(cart.itemsPrice)}</span>
+                      <span className="font-medium">{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Shipping</span>
-                      <span className="font-medium">${formatPrice(cart.shippingPrice)}</span>
+                      <span className="font-medium">{formatPrice(shipping)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax</span>
-                      <span className="font-medium">${formatPrice(cart.taxPrice)}</span>
-                    </div>
+                    {cart.discount && (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Discount ({cart.discount.discountPercentage}%)</span>
+                        <span>-{formatPrice(discountAmount)}</span>
+                      </div>
+                    )}
                     <div className="pt-3 border-t border-gray-200">
                       <div className="flex justify-between">
                         <span className="text-base font-semibold text-gray-900">Total</span>
-                        <span className="text-base font-semibold text-gray-900">${formatPrice(cart.totalPrice)}</span>
+                        <span className="text-base font-semibold text-gray-900">
+                          {formatPrice(finalTotal)}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -141,7 +169,8 @@ const PlaceOrder = () => {
                       <h3 className="font-medium">Shipping Address</h3>
                     </div>
                     <p className="text-sm text-gray-600">
-                      {cart.shippingAddress.address}, {cart.shippingAddress.city} {cart.shippingAddress.postalCode}, {cart.shippingAddress.country}
+                      {cart.shippingAddress.address}, {cart.shippingAddress.city}{" "}
+                      {cart.shippingAddress.postalCode}, {cart.shippingAddress.country}
                     </p>
                   </div>
 

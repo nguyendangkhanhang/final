@@ -1,5 +1,6 @@
 import Order from "../models/orderModel.js";
 import Product from "../models/productModel.js";
+import DiscountCode from "../models/discountModel.js";
 
 // Utility Function
 function calcPrices(orderItems) {
@@ -26,73 +27,66 @@ function calcPrices(orderItems) {
   };
 }
 
+// @desc    Create new order
+// @route   POST /api/orders
+// @access  Private
 const createOrder = async (req, res) => {
   try {
-    const { orderItems, shippingAddress, paymentMethod } = req.body;
-
-    if (!orderItems || orderItems.length === 0) {
-      res.status(400);
-      throw new Error("No order items found.");
-    }
-
-    const itemsFromDB = await Product.find({
-      _id: { $in: orderItems.map((x) => x._id) },
-    });
-
-    const dbOrderItems = orderItems.map((itemFromClient) => {
-      const product = itemsFromDB.find(
-        (p) => p._id.toString() === itemFromClient._id
-      );
-
-      if (!product) {
-        res.status(404);
-        throw new Error(`Product not found: ${itemFromClient._id}`);
-      }
-
-      // ❗ Check stock availability
-      if (itemFromClient.qty > product.quantity) {
-        res.status(400);
-        throw new Error(
-          `The product "${product.name}" has only ${product.quantity} left in stock.`
-        );
-      }
-
-      return {
-        ...itemFromClient,
-        product: itemFromClient._id,
-        price: product.price,
-        _id: undefined,
-      };
-    });
-
-    const { itemsPrice, taxPrice, shippingPrice, totalPrice } =
-      calcPrices(dbOrderItems);
-
-    const order = new Order({
-      orderItems: dbOrderItems,
-      user: req.user._id,
+    const {
+      orderItems,
       shippingAddress,
       paymentMethod,
       itemsPrice,
-      taxPrice,
       shippingPrice,
+      taxPrice,
       totalPrice,
-    });
+      couponId,
+      discountPercentage,
+    } = req.body;
 
-    const createdOrder = await order.save();
+    if (orderItems && orderItems.length === 0) {
+      res.status(400);
+      throw new Error("No order items");
+    } else {
+      // Tính toán lại các giá trị để đảm bảo chính xác
+      const discountAmount = (itemsPrice * (discountPercentage || 0)) / 100;
+      const totalAfterDiscount = itemsPrice - discountAmount;
+      const finalShippingPrice = totalAfterDiscount >= 1000000 ? 0 : 30000;
+      const finalTotal = totalAfterDiscount + finalShippingPrice;
 
-    // ✅ Reduce product stock after creating order
-    for (const item of dbOrderItems) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        product.quantity -= item.qty;
-        await product.save();
+      const order = new Order({
+        orderItems: orderItems.map((x) => ({
+          ...x,
+          product: x._id,
+          _id: undefined,
+        })),
+        user: req.user._id,
+        shippingAddress,
+        paymentMethod,
+        itemsPrice,
+        shippingPrice: finalShippingPrice,
+        taxPrice,
+        totalPrice: finalTotal,
+        couponId,
+        discountAmount,
+        discountPercentage: discountPercentage || 0,
+      });
+
+      const createdOrder = await order.save();
+
+      // Nếu có sử dụng mã giảm giá, cập nhật usedCount
+      if (couponId) {
+        await DiscountCode.findByIdAndUpdate(
+          couponId,
+          { $inc: { usedCount: 1 } },
+          { new: true }
+        );
       }
-    }
 
-    res.status(201).json(createdOrder);
+      res.status(201).json(createdOrder);
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 };
 

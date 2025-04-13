@@ -34,6 +34,8 @@ const orderSchema = mongoose.Schema(
     itemsPrice: { type: Number, required: true, default: 0.0 },
     taxPrice: { type: Number, required: true, default: 0.0 },
     shippingPrice: { type: Number, required: true, default: 0.0 },
+    discountAmount: { type: Number, required: true, default: 0.0 },
+    discountPercentage: { type: Number, required: true, default: 0.0 },
     totalPrice: { type: Number, required: true, default: 0.0 },
     isPaid: { type: Boolean, required: true, default: false },
     paidAt: { type: Date },
@@ -41,6 +43,7 @@ const orderSchema = mongoose.Schema(
     deliveredAt: { type: Date },
 
     status: { type: String, required: true, default: "Order Placed" },
+    couponId: { type: mongoose.Schema.Types.ObjectId, ref: "DiscountCode" },
   },
   {
     timestamps: true,

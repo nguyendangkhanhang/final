@@ -12,8 +12,10 @@ import OrderList from "./pages/OrderList.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import Login from "./components/Login";
 import AdminRoute from "./components/AdminRoute";
+import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Order from "@frontend/pages/Orders/Order";
+import DiscountList from "./pages/DiscountList";
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
 export const currency = "$";
@@ -30,6 +32,7 @@ const App = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen">
+      <ToastContainer />
       {token === "" ? (
         <Login setToken={setToken} />
       ) : (
@@ -49,6 +52,7 @@ const App = () => {
                     <Route path="productlist" element={<ProductList />} />
                     <Route path="product/update/:_id" element={<ProductUpdate />} />
                     <Route path="userlist" element={<UserList />} />
+                    <Route path="discountlist" element={<DiscountList />} />
                 </Route>
             </Routes>
             </div>

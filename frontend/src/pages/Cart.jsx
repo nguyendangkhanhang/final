@@ -1,14 +1,26 @@
+import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { FaTrash, FaShoppingCart } from "react-icons/fa";
-import { addToCart, removeFromCart } from "../redux/features/cart/cartSlice";
+import { FaTrash, FaShoppingCart, FaGift } from "react-icons/fa";
+import { addToCart, removeFromCart, setDiscount, clearDiscount } from "../redux/features/cart/cartSlice";
+import { updateCart, formatPrice, calculateSubtotal, calculateDiscount, calculateTotal } from "../Utils/cartUtils";
+import { useGetUserCouponsQuery } from '../redux/api/userCouponApiSlice';
+import { toast } from "react-toastify";
 
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const cart = useSelector((state) => state.cart);
-  const { cartItems } = cart;
+  const { cartItems, discount } = cart;
+
+  const { data: userCouponsData, refetch: refetchUserCoupons } = useGetUserCouponsQuery();
+  const [showCouponModal, setShowCouponModal] = useState(false);
+
+  // Reset discount when component mounts
+  useEffect(() => {
+    dispatch(clearDiscount());
+  }, [dispatch]);
 
   const addToCartHandler = (product, qty) => {
     dispatch(addToCart({ ...product, qty }));
@@ -21,6 +33,30 @@ const Cart = () => {
   const checkoutHandler = () => {
     navigate("/login?redirect=/shipping");
   };
+
+  const handleSelectCoupon = (coupon) => {
+    if (coupon.isUsed) {
+      toast.error('Mã giảm giá đã được sử dụng');
+      return;
+    }
+    
+    dispatch(setDiscount({
+      code: coupon.discountCode.code,
+      discountPercentage: coupon.discountCode.discountPercentage,
+      couponId: coupon._id
+    }));
+    setShowCouponModal(false);
+    toast.success('Áp dụng mã giảm giá thành công');
+  };
+
+  const handleRemoveDiscount = () => {
+    dispatch(clearDiscount());
+    toast.success('Đã xóa mã giảm giá');
+  };
+
+  const subtotal = calculateSubtotal(cartItems);
+  const discountAmount = calculateDiscount(subtotal, discount);
+  const totalAfterDiscount = calculateTotal(subtotal, discountAmount);
 
   if (cartItems.length === 0) {
     return (
@@ -78,7 +114,7 @@ const Cart = () => {
                       </Link>
                       <p className="mt-1 text-sm text-gray-500">{item.brand}</p>
                       <div className="mt-2 text-lg font-semibold text-gray-900">
-                        ${item.price.toFixed(2)}
+                        {formatPrice(item.price)}
                       </div>
                     </div>
 
@@ -118,12 +154,37 @@ const Cart = () => {
               </div>
               
               <div className="p-6 space-y-4">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowCouponModal(true)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-md font-medium hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    <FaGift className="w-5 h-5" />
+                    {discount ? `Mã giảm ${discount.discountPercentage}%` : 'Chọn Mã Giảm Giá'}
+                  </button>
+                  {discount && (
+                    <button
+                      onClick={handleRemoveDiscount}
+                      className="bg-red-500 text-white py-2 px-4 rounded-md font-medium hover:bg-red-600 transition-colors duration-200"
+                    >
+                      Xóa
+                    </button>
+                  )}
+                </div>
+
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="text-gray-900 font-medium">
-                    ${cartItems.reduce((acc, item) => acc + item.qty * item.price, 0).toFixed(2)}
+                    {formatPrice(subtotal)}
                   </span>
                 </div>
+
+                {discount && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Discount ({discount.discountPercentage}%)</span>
+                    <span>-{formatPrice(discountAmount)}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Shipping</span>
@@ -133,8 +194,8 @@ const Cart = () => {
                 <div className="border-t border-gray-200 pt-4 mt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-base font-semibold text-gray-900">Total</span>
-                    <span className="text-xl font-bold text-gray-900">
-                      ${cartItems.reduce((acc, item) => acc + item.qty * item.price, 0).toFixed(2)}
+                    <span className="text-gray-900 font-medium">
+                      {formatPrice(totalAfterDiscount)}
                     </span>
                   </div>
                 </div>
@@ -157,6 +218,53 @@ const Cart = () => {
           </div>
         </div>
       </div>
+
+      {/* Coupon Selection Modal */}
+      {showCouponModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="p-6 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">Chọn Mã Giảm Giá</h3>
+            </div>
+            
+            <div className="p-6 max-h-96 overflow-y-auto">
+              {userCouponsData?.data?.filter(coupon => !coupon.isUsed && coupon.discountCode).map((coupon) => (
+                <div
+                  key={coupon._id}
+                  className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg p-4 text-white mb-4"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-bold">{coupon.discountCode?.code || 'Mã không hợp lệ'}</h4>
+                    <span>Giảm {coupon.discountCode?.discountPercentage || 0}%</span>
+                  </div>
+                  <p className="text-sm mb-4">
+                    Áp dụng từ {new Date(coupon.discountCode?.startDate).toLocaleDateString()} đến{' '}
+                    {new Date(coupon.discountCode?.endDate).toLocaleDateString()}
+                  </p>
+                  <button
+                    onClick={() => handleSelectCoupon(coupon)}
+                    className="w-full bg-white text-green-600 py-2 px-4 rounded-md font-medium hover:bg-gray-100 transition-colors duration-200"
+                  >
+                    Chọn
+                  </button>
+                </div>
+              ))}
+              {userCouponsData?.data?.filter(coupon => !coupon.isUsed && coupon.discountCode).length === 0 && (
+                <p className="text-center text-gray-500">Bạn chưa có mã giảm giá nào</p>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200">
+              <button
+                onClick={() => setShowCouponModal(false)}
+                className="w-full bg-gray-200 text-gray-800 py-2 px-4 rounded-md font-medium hover:bg-gray-300 transition-colors duration-200"
+              >
+                Đóng
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

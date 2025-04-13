@@ -1,4 +1,3 @@
-
 import { apiSlice } from "./apiSlice";
 import { ORDERS_URL, PAYPAL_URL } from "../constants";
 
@@ -8,7 +7,10 @@ export const orderApiSlice = apiSlice.injectEndpoints({
       query: (order) => ({
         url: ORDERS_URL,
         method: "POST",
-        body: order,
+        body: {
+          ...order,
+          couponId: order.couponId || null,
+        },
       }),
       invalidatesTags: ["Orders"], // 🔄 Refetch sau khi tạo đơn hàng
     }),

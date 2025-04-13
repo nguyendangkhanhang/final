@@ -14,6 +14,8 @@ import orderRoutes from "./routes/orderRoutes.js";
 import paypalRoutes from "./routes/paypalRoutes.js";
 import chatbotRoutes from "./routes/chatbotRoutes.js";
 import authRoutes from './routes/authRoutes.js';
+import discountRoutes from './routes/discountRoutes.js';
+import userCouponRoutes from './routes/userCouponRoutes.js';
 
 import cors from 'cors';
 
@@ -40,6 +42,8 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/paypal", paypalRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/discount", discountRoutes);
+app.use('/api/user-coupons', userCouponRoutes);
 
 app.get("/api/config/paypal", (req, res) => {
   res.send({ clientId: process.env.PAYPAL_CLIENT_ID });

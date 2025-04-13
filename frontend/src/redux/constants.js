@@ -5,3 +5,6 @@ export const PRODUCT_URL = "/api/products";
 export const UPLOAD_URL = "/api/upload";
 export const ORDERS_URL = "/api/orders";
 export const PAYPAL_URL = "/api/config/paypal";
+export const DISCOUNT_URL = '/api/discount';
+export const USER_COUPON_URL = "/api/user-coupons";
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000';

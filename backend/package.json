@@ -25,6 +25,7 @@
     "express": "^4.21.2",
     "express-async-handler": "^1.2.0",
     "express-formidable": "^1.2.0",
+    "express-validator": "^7.2.1",
     "flowbite": "^3.1.2",
     "google-auth-library": "^9.15.1",
     "jsonwebtoken": "^9.0.2",

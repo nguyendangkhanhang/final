@@ -23,12 +23,14 @@ import Cart from "./pages/Cart.jsx";
 import Shop from "./pages/Shop.jsx";
 import About from "./pages/About.jsx";
 import Contact from "./pages/Contact.jsx";
+import Coupon from "./pages/Coupon.jsx";
 
 import Shipping from "./pages/Orders/Shipping.jsx";
 import PlaceOrder from "./pages/Orders/PlaceOrder.jsx";
 import Order from "./pages/Orders/Order.jsx";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import MyCoupon from "./pages/User/MyCoupon.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -40,6 +42,7 @@ const router = createBrowserRouter(
       <Route path="/product/:id" element={<ProductDetails />} />
       <Route path="/cart" element={<Cart />} />
       <Route path="/shop" element={<Shop />} />
+      <Route path="/coupon" element={<Coupon />} />
       <Route path='/about' element={<About />} />
       <Route path='/contact' element={<Contact />} />
 
@@ -50,6 +53,7 @@ const router = createBrowserRouter(
         <Route path="/placeorder" element={<PlaceOrder />} />
         <Route path="/order/:id" element={<Order />} />
         <Route path="/userorder" element={<UserOrder />} />
+        <Route path="/mycoupon" element={<MyCoupon />} />
         <Route path="/order/:id/track" element={<OrderTracking />} />
       </Route>
     </Route>

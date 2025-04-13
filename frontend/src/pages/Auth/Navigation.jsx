@@ -57,6 +57,9 @@ const Navigation = () => {
           <Link to="/shop" className="hover:text-pink-500 transition">COLLECTION</Link>
         </li>
         <li>
+          <Link to="/coupon" className="hover:text-pink-500 transition">COUPON</Link>
+        </li>
+        <li>
           <Link to="/about" className="hover:text-pink-500 transition">ABOUT</Link>
         </li>
         <li>
@@ -84,6 +87,7 @@ const Navigation = () => {
             <div className="absolute hidden group-hover:block right-0 bg-white shadow-lg rounded-md p-2">
               <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
               <Link to="/userorder" className="block px-4 py-2 hover:bg-gray-100">Order</Link>
+              <Link to="/mycoupon" className="block px-4 py-2 hover:bg-gray-100">My Coupon</Link>
               <button
                 onClick={logoutHandler}
                 className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"

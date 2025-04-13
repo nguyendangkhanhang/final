@@ -110,6 +110,16 @@ const Sidebar = () => {
             </div>
             {!isCollapsed && <span className='font-medium'>Orders</span>}
           </NavLink>
+
+          <NavLink 
+            to="/admin/discountlist"
+            className={({ isActive }) => getNavLinkClass(isActive)}
+          >
+            <div className={getIconContainerClass(false)}>
+              <img className='w-[22px] h-[22px] transform group-hover:scale-110 transition-transform duration-300' src={assets.discount_icon} alt="" />
+            </div>
+            {!isCollapsed && <span className='font-medium'>Discount Codes</span>}
+          </NavLink>
         </div>
       </nav>
 
