@@ -44,7 +44,6 @@ const PlaceOrder = () => {
         paymentMethod: cart.paymentMethod,
         itemsPrice: Number(subtotal),
         shippingPrice: Number(shipping),
-        taxPrice: Number(cart.taxPrice),
         totalPrice: Number(finalTotal),
         couponId: cart.discount?.couponId,
         discountPercentage: cart.discount?.discountPercentage || 0,
