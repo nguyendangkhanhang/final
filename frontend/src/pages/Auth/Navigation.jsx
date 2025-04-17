@@ -7,13 +7,9 @@ import {
   AiOutlineShoppingCart,
   AiOutlineSearch,
 } from "react-icons/ai";
-import { FaHeart } from "react-icons/fa";
 import { Link } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
 import "./Navigation.css";
 import { useSelector, useDispatch } from "react-redux";
-import { useLogoutMutation } from "../../redux/api/usersApiSlice";
-import { logout } from "../../redux/features/auth/authSlice";
 import FavoritesCount from "../Products/FavoritesCount";
 import {assets} from '../../assets/assets'
 
@@ -28,20 +24,6 @@ const Navigation = () => {
     setDropdownOpen(!dropdownOpen);
   };
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const [logoutApiCall] = useLogoutMutation();
-
-  const logoutHandler = async () => {
-    try {
-      await logoutApiCall().unwrap();
-      dispatch(logout());
-      navigate("/login");
-    } catch (error) {
-      console.error(error);
-    }
-  };
 
   return (
     <nav className="flex justify-between items-center bg-white shadow-md fixed w-full top-0 z-50 px-[5%] py-3">
@@ -51,53 +33,46 @@ const Navigation = () => {
 
       <ul className="flex space-x-10 text-gray-800 text-lg font-medium">
         <li>
-          <Link to="/" className="hover:text-pink-500 transition">HOME</Link>
+          <Link to="/" className="relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">HOME</Link>
         </li>
         <li>
-          <Link to="/shop" className="hover:text-pink-500 transition">COLLECTION</Link>
+          <Link to="/shop" className="relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">COLLECTION</Link>
         </li>
         <li>
-          <Link to="/coupon" className="hover:text-pink-500 transition">COUPON</Link>
+          <Link to="/coupon" className="relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">COUPON</Link>
         </li>
         <li>
-          <Link to="/about" className="hover:text-pink-500 transition">ABOUT</Link>
+          <Link to="/about" className="relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">ABOUT</Link>
         </li>
         <li>
-          <Link to="/contact" className="hover:text-pink-500 transition">CONTACT</Link>
+          <Link to="/contact" className="relative inline-block after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">CONTACT</Link>
         </li>
       </ul>
 
       <div className="flex items-center space-x-6 text-xl">
-        <Link to="/shop" className="hover:text-pink-500 transition">
-          <AiOutlineSearch className="cursor-pointer hover:text-pink-500" />
+        <Link to="/shop" className="inline-block transition-transform duration-300 hover:-translate-y-0.5 text-gray-800">
+          <AiOutlineSearch />
         </Link>
 
-        <Link to="/cart" className="relative">
-          <AiOutlineShoppingCart className="hover:text-pink-500" />
+        <Link to="/cart" className="relative inline-block transition-transform duration-300 hover:-translate-y-0.5">
+          <AiOutlineShoppingCart className="text-gray-800" />
           {cartItems.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-pink-500 text-white text-xs px-2 rounded-full">
+            <span className="absolute -top-2 -right-2 bg-black text-white text-xs px-2 rounded-full">
               {cartItems.reduce((a, c) => a + c.qty, 0)}
             </span>
           )}
         </Link>
 
         {userInfo ? (
-          <div className="relative group">
-            <AiOutlineUser className="cursor-pointer hover:text-pink-500" />
-            <div className="absolute hidden group-hover:block right-0 bg-white shadow-lg rounded-md p-2">
+          <div className="relative group inline-block transition-transform duration-300 hover:-translate-y-0.5">
+            <AiOutlineUser className="cursor-pointer text-gray-800" />
+            <div className="absolute hidden group-hover:block right-0 bg-white shadow-lg rounded-md p-2 min-w-max">
               <Link to="/profile" className="block px-4 py-2 hover:bg-gray-100">Profile</Link>
               <Link to="/userorder" className="block px-4 py-2 hover:bg-gray-100">Order</Link>
-              <Link to="/mycoupon" className="block px-4 py-2 hover:bg-gray-100">My Coupon</Link>
-              <button
-                onClick={logoutHandler}
-                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-100"
-              >
-                Logout
-              </button>
             </div>
           </div>
         ) : (
-          <Link to="/login" className="text-gray-800 hover:text-pink-500 text-lg font-medium">LOGIN</Link>
+          <Link to="/login" className="relative inline-block text-gray-800 text-lg font-medium after:content-[''] after:absolute after:left-0 after:-bottom-1 after:w-0 after:h-[2px] after:bg-gray-800 after:transition-all after:duration-300 hover:after:w-full">LOGIN</Link>
         )}
       </div>
     </nav>

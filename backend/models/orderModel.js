@@ -14,6 +14,7 @@ const orderSchema = new mongoose.Schema(
           required: true,
           ref: "Product",
         },
+        selectedSize: { type: String, required: true },
       },
     ],
     shippingAddress: {
@@ -21,12 +22,13 @@ const orderSchema = new mongoose.Schema(
       city: { type: String, required: true },
       postalCode: { type: String, required: true },
       country: { type: String, required: true },
+      phone: { type: String, required: true },
     },
     paymentMethod: { type: String, required: true },
 
     paymentResult: {
       id: { type: String },
-      status: { type: String }, // ✅ Đây là trạng thái của thanh toán, không phải trạng thái đơn hàng
+      status: { type: String }, 
       update_time: { type: String },
       email_address: { type: String },
     },

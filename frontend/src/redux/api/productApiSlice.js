@@ -88,6 +88,14 @@ export const productApiSlice = apiSlice.injectEndpoints({
         body: { checked, radio },
       }),
     }),
+
+    updateProductQuantity: builder.mutation({
+      query: ({ productId, quantity }) => ({
+        url: `${PRODUCT_URL}/${productId}/quantity`,
+        method: "PUT",
+        body: { quantity },
+      }),
+    }),
   }),
 });
 
@@ -104,4 +112,5 @@ export const {
   useGetNewProductsQuery,
   useUploadProductImageMutation,
   useGetFilteredProductsQuery,
+  useUpdateProductQuantityMutation,
 } = productApiSlice;

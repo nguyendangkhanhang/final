@@ -117,10 +117,10 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    if (salesDetail) {
+    if (salesDetail && Array.isArray(salesDetail)) {
       const formattedSalesDate = salesDetail.map((item) => ({
-        x: item._id,
-        y: item.totalSales,
+        x: item._id || '',
+        y: item.totalSales || 0,
       }));
 
       setState((prevState) => ({
@@ -162,7 +162,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-baseline">
                     <h3 className="text-2xl font-bold text-gray-900">
-                      {isLoading ? <Loader /> : `$${sales?.totalSales.toFixed(2)}`}
+                      {isLoading ? <Loader /> : `$${sales?.totalSales?.toFixed(2) || '0.00'}`}
                     </h3>
                   </div>
                 </div>
@@ -179,7 +179,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-baseline">
                     <h3 className="text-2xl font-bold text-gray-900">
-                      {loading ? <Loader /> : customers?.length}
+                      {loading ? <Loader /> : customers?.length || 0}
                     </h3>
                   </div>
                 </div>
@@ -196,7 +196,7 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex items-baseline">
                     <h3 className="text-2xl font-bold text-gray-900">
-                      {loadingTwo ? <Loader /> : orders?.totalOrders}
+                      {loadingTwo ? <Loader /> : orders?.totalOrders || 0}
                     </h3>
                   </div>
                 </div>

@@ -30,7 +30,6 @@ import PlaceOrder from "./pages/Orders/PlaceOrder.jsx";
 import Order from "./pages/Orders/Order.jsx";
 import { PayPalScriptProvider } from "@paypal/react-paypal-js";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import MyCoupon from "./pages/User/MyCoupon.jsx";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -53,7 +52,6 @@ const router = createBrowserRouter(
         <Route path="/placeorder" element={<PlaceOrder />} />
         <Route path="/order/:id" element={<Order />} />
         <Route path="/userorder" element={<UserOrder />} />
-        <Route path="/mycoupon" element={<MyCoupon />} />
         <Route path="/order/:id/track" element={<OrderTracking />} />
       </Route>
     </Route>

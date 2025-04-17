@@ -21,7 +21,7 @@ const addProduct = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: "Size must be a non-empty array and cannot contain null values" });
     }
 
-    const product = new Product({ name, description, price, category, subCategory, quantity, brand, size, image });
+    const product = new Product({ name, description, price, category, quantity, brand, size, image });
     await product.save();
     res.json(product);
   } catch (error) {
@@ -32,7 +32,7 @@ const addProduct = asyncHandler(async (req, res) => {
 
 const updateProductDetails = asyncHandler(async (req, res) => {
   try {
-    let { name, description, price, category, subCategory, quantity, brand, size } = req.fields;
+    let { name, description, price, category, quantity, brand, size, image } = req.fields;
 
     // 🛠 Parse size nếu là JSON string
     if (typeof size === "string") {
@@ -61,16 +61,36 @@ const updateProductDetails = asyncHandler(async (req, res) => {
         return res.json({ error: "Quantity is required" });
     }
 
+    // Tạo object update với tất cả các trường
+    const updateData = {
+      name,
+      description,
+      price,
+      category,
+      quantity,
+      brand,
+      size
+    };
+
+    // Nếu có image mới, thêm vào updateData
+    if (image) {
+      updateData.image = image;
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, price, category, quantity, brand, size },
+      updateData,
       { new: true }
     );
+
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
 
     await product.save();
     res.json(product);
   } catch (error) {
-    console.error(error);
+    console.error("Error updating product:", error);
     res.status(400).json(error.message);
   }
 });
@@ -118,7 +138,6 @@ const fetchProductById = asyncHandler(async (req, res) => {
   try {
     const product = await Product.findById(req.params.id)
       .populate("category")
-      .populate("subCategory"); // Populate thêm subCategory
 
     if (product) {
       return res.json(product);
@@ -136,7 +155,6 @@ const fetchAllProducts = asyncHandler(async (req, res) => {
   try {
     const products = await Product.find({})
       .populate("category")
-      .populate("subCategory") // Populate thêm subCategory
       .limit(12)
       .sort({ createdAt: -1 });
 
@@ -217,6 +235,28 @@ const filterProducts = asyncHandler(async (req, res) => {
   }
 });
 
+// @desc    Update product quantity
+// @route   PUT /api/products/:id/quantity
+// @access  Private/Admin
+const updateProductQuantity = async (req, res) => {
+  try {
+    const { quantity } = req.body;
+
+    const product = await Product.findById(req.params.id);
+
+    if (product) {
+      product.quantity = quantity;
+      const updatedProduct = await product.save();
+      res.json(updatedProduct);
+    } else {
+      res.status(404);
+      throw new Error("Product not found");
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // const getProductRecommendations = async (req, res) => {
 //   try {
 //     const { query } = req.body;  // Query từ khách hàng (ví dụ: tìm "t-shirt", "laptop", v.v.)
@@ -248,5 +288,6 @@ export {
   fetchTopProducts,
   fetchNewProducts,
   filterProducts,
+  updateProductQuantity,
   // getProductRecommendations,
 };

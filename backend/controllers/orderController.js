@@ -172,6 +172,15 @@ const markOrderAsPaid = async (req, res) => {
     const order = await Order.findById(req.params.id);
 
     if (order) {
+      // Update product quantities
+      for (const item of order.orderItems) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.quantity -= item.qty;
+          await product.save();
+        }
+      }
+
       order.isPaid = true;
       order.paidAt = Date.now();
       order.paymentResult = {

@@ -6,6 +6,7 @@ import {
   useGetProductDetailsQuery,
   useGetTopProductsQuery,
   useCreateReviewMutation,
+  useUpdateProductQuantityMutation,
 } from "../../redux/api/productApiSlice";
 import Loader from "../../components/Loader";
 import Message from "../../components/Message";
@@ -14,6 +15,7 @@ import ProductTabs from "./ProductTabs";
 import { addToCart } from "../../redux/features/cart/cartSlice";
 import SmallProduct from "./SmallProduct";
 import Title from "../../components/Title";
+import { formatPrice } from "../../Utils/cartUtils";
 
 const ProductDetails = () => {
   const { id: productId } = useParams();
@@ -31,8 +33,11 @@ const ProductDetails = () => {
     isLoading,
     refetch,
     error,
-  } = useGetProductDetailsQuery(productId);
+  } = useGetProductDetailsQuery(productId, {
+    pollingInterval: 3000,
+  });
 
+  const [updateProductQuantity] = useUpdateProductQuantityMutation();
   const { userInfo } = useSelector((state) => state.auth);
   const [createReview, { isLoading: loadingProductReview }] =
     useCreateReviewMutation();
@@ -68,6 +73,7 @@ const ProductDetails = () => {
       return;
     }
 
+    // Only add to cart, don't update product quantity
     dispatch(addToCart({ ...product, qty, selectedSize }));
     navigate("/cart");
   };
@@ -88,7 +94,7 @@ const ProductDetails = () => {
         <div className="flex-1">
           <h1 className="font-medium text-2xl mt-2">{product.name}</h1>
           <Ratings value={product.rating} text={`${product.numReviews} reviews`} />
-          <p className="mt-5 text-3xl font-medium">$ {product.price}</p>
+          <p className="mt-5 text-3xl font-medium">{formatPrice(product.price)}</p>
 
           {/* Stock info */}
           {product.quantity > 0 ? (
@@ -155,7 +161,7 @@ const ProductDetails = () => {
         <Title text1={"RELATED"} text2={"PRODUCTS"} />
       </div>
 
-      <div className="ml-[20rem] flex flex-wrap">
+      <div className="ml-[12rem] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 mr-[12rem]">
         {!data ? (
           <Loader />
         ) : (

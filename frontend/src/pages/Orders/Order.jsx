@@ -5,6 +5,8 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Message from "../../components/Message";
 import Loader from "../../components/Loader";
+import Title from '../../components/Title';
+import ScrollAnimator from '../../components/ScrollAnimator';
 import {
   useDeliverOrderMutation,
   useGetOrderDetailsQuery,
@@ -92,20 +94,35 @@ const Order = () => {
   ) : error ? (
     <Message variant="danger">{error.data?.message || error.message}</Message>
   ) : (
-    <div className="min-h-screen bg-gray-50 py-12 text-2xl leading-relaxed">
-      <div className="max-w-[1400px] mx-auto px-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Order Details</h1>
-          <p className="mt-2 text-sm text-gray-600">Order ID: {order?._id}</p>
+    <div className="bg-gray-50 min-h-screen">
+      <ScrollAnimator>
+        <div 
+          className="relative h-64 md:h-80 flex items-center justify-center text-black bg-[#efe9e0] overflow-hidden"
+        >
+          <div className='relative z-10 text-center px-4'>
+            <div className='text-7xl text-center'>
+              <Title text1={'ORDER'} text2={'DETAILS'} />
+            </div>
+            <p className="mt-2 text-lg md:text-xl text-gray-700">Review your order information</p>
+          </div>
         </div>
+        <div className="bg-[#efe9e0]">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 100" className="block" fill="#f9fafb">
+            <path d="M1440,50 C1200,100 900,0 720,0 C540,0 240,100 0,50 L0,100 L1440,100 Z"></path>
+          </svg>
+        </div>
+      </ScrollAnimator>
 
+      <div className="max-w-[1400px] mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Items */}
           <div className="lg:col-span-2 space-y-6">
             <div className="bg-white rounded-lg shadow overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-2xl font-semibold text-gray-900">Order Items</h2>
+                <p className="mt-2 text-sm text-gray-600">Order ID: {order?._id}</p>
               </div>
+              
               {order?.orderItems?.length === 0 ? (
                 <div className="p-6">
                   <Message>Order is empty</Message>
@@ -116,9 +133,10 @@ const Order = () => {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-base text-gray-500 uppercase">Product</th>
-                        <th className="px-6 py-3 text-left text-base text-gray-500 uppercase">Quantity</th>
-                        <th className="px-6 py-3 text-left text-base text-gray-500 uppercase">Price</th>
-                        <th className="px-6 py-3 text-left text-base text-gray-500 uppercase">Total</th>
+                        <th className="px-6 py-3 text-center text-base text-gray-500 uppercase">Size</th>
+                        <th className="px-6 py-3 text-center text-base text-gray-500 uppercase">Quantity</th>
+                        <th className="px-6 py-3 text-center text-base text-gray-500 uppercase">Price</th>
+                        <th className="px-6 py-3 text-center text-base text-gray-500 uppercase">Total</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -140,10 +158,13 @@ const Order = () => {
                               </div>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-base text-gray-500">{item.qty}</td>
-                          <td className="px-6 py-4 text-base text-gray-500">${item.price.toFixed(2)}</td>
-                          <td className="px-6 py-4 text-base font-medium text-gray-900">
-                            ${(item.qty * item.price).toFixed(2)}
+                          <td className="px-6 py-4 text-center text-base text-gray-500">
+                            {item.selectedSize}
+                          </td>
+                          <td className="px-6 py-4 text-center text-base text-gray-500">{item.qty}</td>
+                          <td className="px-6 py-4 text-center text-base text-gray-500">{formatPrice(item.qty * item.price)}</td>
+                          <td className="px-6 py-4 text-center text-base font-medium text-gray-900">
+                            {formatPrice(item.qty * item.price)}
                           </td>
                         </tr>
                       ))}
@@ -171,7 +192,8 @@ const Order = () => {
                   <h3 className="text-lg font-medium text-gray-500">Customer Details</h3>
                   <p className="mt-2 text-base text-gray-900">
                     {order?.user?.username}<br />
-                    {order?.user?.email}
+                    {order?.user?.email}<br />
+                    {order?.shippingAddress?.phone}
                   </p>
                 </div>
               </div>

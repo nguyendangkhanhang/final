@@ -3,6 +3,7 @@ import { AiOutlineShoppingCart } from "react-icons/ai";
 import { useDispatch } from "react-redux";
 import { addToCart } from "../../redux/features/cart/cartSlice";
 import { toast } from "react-toastify";
+import { formatPrice } from "../../Utils/cartUtils";
 
 const ProductCard = ({ p }) => {
   const dispatch = useDispatch();
@@ -13,7 +14,7 @@ const ProductCard = ({ p }) => {
   };
 
   return (
-    <div className="max-w-[280px] bg-white">
+    <div className="max-w-[280px] bg-white object-cover transition-transform duration-300 hover:scale-105">
       {/* Image Section */}
       <div className="relative">
         <Link to={`/product/${p._id}`}>
@@ -23,24 +24,13 @@ const ProductCard = ({ p }) => {
             alt={p.name}
           />
         </Link>
-
-        {/* Giỏ hàng ở góc dưới phải của hình ảnh */}
-        <button
-          className="absolute bottom-2 right-2 bg-black text-white p-2 rounded-full opacity-80 hover:opacity-100 transition"
-          onClick={() => addToCartHandler(p, 1)}
-        >
-          <AiOutlineShoppingCart size={20} />
-        </button>
       </div>
 
       {/* Product Name & Price */}
       <div className="p-2 text-left">
         <h5 className="text-xl font-medium text-gray-900">{p?.name}</h5>
         <p className="text-md text-gray-800">
-          {p?.price?.toLocaleString("en-US", {
-            style: "currency",
-            currency: "USD",
-          })}
+          {formatPrice(p.price)}
         </p>
       </div>
     </div>
