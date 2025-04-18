@@ -16,7 +16,7 @@ const Product = ({ product }) => {
 
       <div className="p-4">
         <Link to={`/product/${product._id}`}>
-          <h2 className="text-2xl font-bold text-gray-800">{product.name}</h2>
+          <h2 className="text-2xl uppercase font-semibold text-gray-800">{product.name}</h2>
         </Link>
         <div className="mt-1 text-lg text-black">{formatPrice(product.price)}</div>
       </div>

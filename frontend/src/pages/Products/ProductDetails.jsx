@@ -92,7 +92,7 @@ const ProductDetails = () => {
         </div>
 
         <div className="flex-1">
-          <h1 className="font-medium text-2xl mt-2">{product.name}</h1>
+          <h1 className="font-semibold uppercase text-3xl mt-2">{product.name}</h1>
           <Ratings value={product.rating} text={`${product.numReviews} reviews`} />
           <p className="mt-5 text-3xl font-medium">{formatPrice(product.price)}</p>
 
@@ -103,7 +103,13 @@ const ProductDetails = () => {
             <p className="mt-2 text-red-500 font-semibold">Out of stock</p>
           )}
 
-          <p className="mt-5 text-gray-500 md:w-4/5">{product.description}</p>
+          <p className="mt-5 text-gray-500 md:w-4/5 space-y-2">
+            {product.description?.split('\n').map((line, index) =>
+              line.trim() ? (
+                <p key={index} className="leading-relaxed">{line.trim()}</p>
+              ) : null
+            )}
+          </p>
 
           <div className="flex flex-col gap-4 my-8">
             <p>Select Size</p>

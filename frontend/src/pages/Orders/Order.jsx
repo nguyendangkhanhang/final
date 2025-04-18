@@ -248,7 +248,7 @@ const Order = () => {
                   </div>
 
                   {/* PayPal + Admin Deliver */}
-                  {!order?.isPaid && (
+                  {!order?.isPaid && order?.paymentMethod !== "Cash on Delivery" && (
                     <div className="space-y-4">
                       {loadingPay && <Loader />}
                       {isPending ? (

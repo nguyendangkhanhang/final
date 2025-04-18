@@ -28,7 +28,7 @@ const ProductCard = ({ p }) => {
 
       {/* Product Name & Price */}
       <div className="p-2 text-left">
-        <h5 className="text-xl font-medium text-gray-900">{p?.name}</h5>
+        <h5 className="text-xl uppercase font-medium text-gray-900">{p?.name}</h5>
         <p className="text-md text-gray-800">
           {formatPrice(p.price)}
         </p>

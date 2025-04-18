@@ -9,12 +9,13 @@ import Title from '../../components/Title';
 import ScrollAnimator from '../../components/ScrollAnimator';
 import { FaShoppingBag, FaCheckCircle, FaClock, FaTruck, FaEye } from 'react-icons/fa';
 import Pagination from '../../components/Pagination';
+import { formatPrice } from "../../Utils/cartUtils";
 
 const UserOrder = () => {
   const dispatch = useDispatch();
   const { data: orders, isLoading, error, refetch } = useGetMyOrdersQuery();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 20;
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -141,7 +142,7 @@ const UserOrder = () => {
                         <td className="px-8 py-4 whitespace-nowrap">
                           <div className="text-center">
                             <div className="text-base font-medium text-[#5b3f15]">
-                              ${order.totalPrice.toFixed(2)}
+                              {formatPrice(order.totalPrice.toFixed(2))}
                             </div>
                             <div className="text-base text-[#bd8837]">
                               {order.paymentMethod}

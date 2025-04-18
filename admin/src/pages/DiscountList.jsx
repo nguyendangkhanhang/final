@@ -8,6 +8,8 @@ import {
 } from '@frontend/redux/api/discountApiSlice';
 import { resetDiscountState } from '@frontend/redux/features/discount/discountSlice';
 import { toast } from 'react-toastify';
+import { PencilSquareIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
+import Pagination from '@frontend/components/Pagination';
 
 const DiscountList = () => {
     const dispatch = useDispatch();
@@ -16,6 +18,8 @@ const DiscountList = () => {
     const [createDiscountCode] = useCreateDiscountCodeMutation();
     const [updateDiscountCode] = useUpdateDiscountCodeMutation();
     const [deleteDiscountCode] = useDeleteDiscountCodeMutation();
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const [showModal, setShowModal] = useState(false);
     const [editingDiscount, setEditingDiscount] = useState(null);
@@ -97,213 +101,248 @@ const DiscountList = () => {
         }
     };
 
+    const totalPages = discountCodes ? Math.ceil(discountCodes.length / itemsPerPage) : 1;
+
+    const currentDiscountCodes = discountCodes
+        ? discountCodes.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+        : [];
+
+    const handlePageChange = (page) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold">Quản lý mã giảm giá</h1>
-                <button
-                    onClick={() => {
-                        setEditingDiscount(null);
-                        setFormData({
-                            code: '',
-                            discountPercentage: '',
-                            startDate: '',
-                            endDate: '',
-                            usageLimit: '',
-                            minimumOrderAmount: '',
-                            description: ''
-                        });
-                        setShowModal(true);
-                    }}
-                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                >
-                    Thêm mã giảm giá
-                </button>
-            </div>
-
-            {isLoading ? (
-                <div className="text-center">Loading...</div>
-            ) : (
-                <div className="overflow-x-auto">
-                    <table className="min-w-full bg-white">
-                        <thead>
-                            <tr>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Mã
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Giảm giá
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Ngày bắt đầu
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Ngày kết thúc
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Đã sử dụng
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Tối thiểu
-                                </th>
-                                <th className="px-6 py-3 border-b-2 border-gray-200 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                                    Thao tác
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {discountCodes.map((discount) => (
-                                <tr key={discount._id}>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {discount.code}
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {discount.discountPercentage}%
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {new Date(discount.startDate).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {new Date(discount.endDate).toLocaleDateString()}
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {discount.usedCount}/{discount.usageLimit}
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        {discount.minimumOrderAmount.toLocaleString()}đ
-                                    </td>
-                                    <td className="px-6 py-4 border-b border-gray-200">
-                                        <button
-                                            onClick={() => handleEdit(discount)}
-                                            className="text-blue-500 hover:text-blue-700 mr-2"
-                                        >
-                                            Sửa
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(discount._id)}
-                                            className="text-red-500 hover:text-red-700"
-                                        >
-                                            Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            )}
-
-            {showModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <div className="bg-white p-6 rounded-lg w-96">
-                        <h2 className="text-xl font-bold mb-4">
-                            {editingDiscount ? 'Sửa mã giảm giá' : 'Thêm mã giảm giá'}
-                        </h2>
-                        <form onSubmit={handleSubmit}>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Mã giảm giá
-                                </label>
-                                <input
-                                    type="text"
-                                    value={formData.code}
-                                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Phần trăm giảm giá
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formData.discountPercentage}
-                                    onChange={(e) => setFormData({ ...formData, discountPercentage: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    min="0"
-                                    max="100"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Ngày bắt đầu
-                                </label>
-                                <input
-                                    type="date"
-                                    value={formData.startDate}
-                                    onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Ngày kết thúc
-                                </label>
-                                <input
-                                    type="date"
-                                    value={formData.endDate}
-                                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Giới hạn sử dụng
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formData.usageLimit}
-                                    onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    min="1"
-                                    required
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Giá trị đơn hàng tối thiểu
-                                </label>
-                                <input
-                                    type="number"
-                                    value={formData.minimumOrderAmount}
-                                    onChange={(e) => setFormData({ ...formData, minimumOrderAmount: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                    min="0"
-                                />
-                            </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-700 text-sm font-bold mb-2">
-                                    Mô tả
-                                </label>
-                                <textarea
-                                    value={formData.description}
-                                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                />
-                            </div>
-                            <div className="flex justify-end">
-                                <button
-                                    type="button"
-                                    onClick={() => setShowModal(false)}
-                                    className="bg-gray-500 text-white px-4 py-2 rounded mr-2 hover:bg-gray-600"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    type="submit"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                >
-                                    {editingDiscount ? 'Cập nhật' : 'Thêm'}
-                                </button>
-                            </div>
-                        </form>
+        <div className="min-h-screen">
+            <div className="max-w-7xl mx-auto">
+                <div className="flex justify-between items-center mb-8">
+                    <div>
+                        <h1 className="text-3xl uppercase font-bold text-[#5b3f15]">Discount Codes</h1>
+                        <p className="text-gray-400 mt-1">Manage your discount codes and promotions</p>
                     </div>
+                    <button
+                        onClick={() => {
+                            setEditingDiscount(null);
+                            setFormData({
+                                code: '',
+                                discountPercentage: '',
+                                startDate: '',
+                                endDate: '',
+                                usageLimit: '',
+                                minimumOrderAmount: '',
+                                description: ''
+                            });
+                            setShowModal(true);
+                        }}
+                        className="flex items-center gap-2 bg-white border border-[#5b3f15] text-[#5b3f15] px-6 py-3 hover:bg-[#5b3f15] hover:text-white transition-colors duration-200 shadow-lg"
+                    >
+                        <PlusIcon className="w-5 h-5" />
+                        Add Discount Code
+                    </button>
                 </div>
-            )}
+
+                {isLoading ? (
+                    <div className="text-center text-[#5b3f15]">Loading...</div>
+                ) : (
+                    <div >
+                        <div className="overflow-x-auto">
+                            <table className="min-w-full">
+                                <thead>
+                                    <tr className="bg-[#5b3f15] text-white">
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Code
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Discount
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Start Date
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            End Date
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Usage
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Min. Order
+                                        </th>
+                                        <th className="px-6 py-4 text-left text-base font-semibold uppercase tracking-wider">
+                                            Actions
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {currentDiscountCodes.map((discount) => (
+                                        <tr key={discount._id} className="hover:bg-[#efe9e0] transition-colors duration-150">
+                                            <td className="px-6 py-4 whitespace-nowrap text-black font-medium">
+                                                {discount.code}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-black">
+                                                {discount.discountPercentage}%
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-black">
+                                                {new Date(discount.startDate).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-black">
+                                                {new Date(discount.endDate).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-black">
+                                                {discount.usedCount}/{discount.usageLimit}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-black">
+                                                {discount.minimumOrderAmount.toLocaleString()}đ
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => handleEdit(discount)}
+                                                        className="p-2 text-[#bd8837] hover:text-[#5b3f15] hover:bg-[#efe9e0] rounded-lg transition-colors duration-200"
+                                                        title="Edit"
+                                                    >
+                                                        <PencilSquareIcon className="w-5 h-5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(discount._id)}
+                                                        className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors duration-200"
+                                                        title="Delete"
+                                                    >
+                                                        <TrashIcon className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                )}
+
+                {totalPages > 1 && (
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                )}
+                {showModal && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                        <div className="bg-white p-8 rounded-xl w-[500px] shadow-2xl">
+                            <h2 className="text-2xl font-bold text-[#5b3f15] mb-6">
+                                {editingDiscount ? 'Edit Discount Code' : 'Add New Discount Code'}
+                            </h2>
+                            <form onSubmit={handleSubmit} className="space-y-4">
+                                <div>
+                                    <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                        Discount Code
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={formData.code}
+                                        onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                        Discount Percentage
+                                    </label>
+                                    <input
+                                        type="number"
+                                        value={formData.discountPercentage}
+                                        onChange={(e) => setFormData({ ...formData, discountPercentage: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                        min="0"
+                                        max="100"
+                                        required
+                                    />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                            Start Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.startDate}
+                                            onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                            End Date
+                                        </label>
+                                        <input
+                                            type="date"
+                                            value={formData.endDate}
+                                            onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                            Usage Limit
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.usageLimit}
+                                            onChange={(e) => setFormData({ ...formData, usageLimit: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                            min="1"
+                                            required
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                            Minimum Order Amount
+                                        </label>
+                                        <input
+                                            type="number"
+                                            value={formData.minimumOrderAmount}
+                                            onChange={(e) => setFormData({ ...formData, minimumOrderAmount: e.target.value })}
+                                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                            min="0"
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-[#5b3f15] text-sm font-semibold mb-2">
+                                        Description
+                                    </label>
+                                    <textarea
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#bd8837] focus:border-transparent"
+                                        rows="3"
+                                    />
+                                </div>
+                                <div className="flex justify-end space-x-4 mt-6">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowModal(false)}
+                                        className="px-6 py-2 border border-[#5b3f15] text-[#5b3f15] rounded-lg hover:bg-[#efe9e0] transition-colors duration-200"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="px-6 py-2 bg-[#bd8837] text-white rounded-lg hover:bg-[#5b3f15] transition-colors duration-200"
+                                    >
+                                        {editingDiscount ? 'Update' : 'Add'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

@@ -221,16 +221,21 @@ const markOrderAsDelivered = async (req, res) => {
   }
 };
 
-
 const updateStatus = async (req, res) => {
   try {
-    const { status } = req.body; // ✅ Lấy status từ body
-    const orderId = req.params.id; // ✅ Lấy orderId từ URL params
+    const { status } = req.body;
+    const orderId = req.params.id;
 
-    const order = await Order.findById(orderId); // ✅ Tìm order theo params
+    const order = await Order.findById(orderId);
 
     if (!order) {
       return res.status(404).json({ success: false, message: "Order not found" });
+    }
+
+    // Nếu trạng thái mới là "Delivered" và phương thức thanh toán là "Cash on Delivery"
+    if (status === "Delivered" && order.paymentMethod === "Cash on Delivery" && !order.isPaid) {
+      order.isPaid = true;
+      order.paidAt = Date.now();
     }
 
     order.status = status;

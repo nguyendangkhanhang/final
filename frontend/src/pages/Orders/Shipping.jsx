@@ -214,23 +214,6 @@ const Shipping = () => {
                       type="radio"
                       className="w-5 h-5 text-[#5b3f15] focus:ring-[#efe9e0] border-gray-300"
                       name="paymentMethod"
-                      value="VNPay"
-                      checked={paymentMethod === "VNPay"}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                    />
-                    <div>
-                      <span className="text-gray-900 font-medium">VNPay</span>
-                      <p className="text-sm text-gray-500">Pay with VNPay</p>
-                    </div>
-                  </label>
-                </div>
-
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <label className="flex items-center gap-4 cursor-pointer group">
-                    <input
-                      type="radio"
-                      className="w-5 h-5 text-[#5b3f15] focus:ring-[#efe9e0] border-gray-300"
-                      name="paymentMethod"
                       value="Cash on Delivery"
                       checked={paymentMethod === "Cash on Delivery"}
                       onChange={(e) => setPaymentMethod(e.target.value)}

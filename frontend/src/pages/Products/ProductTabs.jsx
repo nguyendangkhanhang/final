@@ -25,16 +25,16 @@ const ProductTabs = ({
             {/* Tabs Header */}
             <div className="border-b flex">
                 <div
-                    className={`py-3 px-6 cursor-pointer text-lg ${
-                        activeTab === 1 ? "font-bold border-b-2 border-black" : ""
+                    className={`py-3 px-6 cursor-pointer text-lg transition-all duration-300 ${
+                        activeTab === 1 ? "font-bold border-b-2 border-#5b3f15 text-[#5b3f15]" : "text-gray-500 hover:text-[#5b3f15]"
                     }`}
                     onClick={() => setActiveTab(1)}
                 >
                     Write Your Review
                 </div>
                 <div
-                    className={`py-3 px-6 cursor-pointer text-lg ${
-                        activeTab === 2 ? "font-bold border-b-2 border-black" : ""
+                    className={`py-3 px-6 cursor-pointer text-lg transition-all duration-300 ${
+                        activeTab === 2 ? "font-bold border-b-2 border-#5b3f15 text-[#5b3f15]" : "text-gray-500 hover:text-[#5b3f15]"
                     }`}
                     onClick={() => setActiveTab(2)}
                 >
@@ -47,9 +47,9 @@ const ProductTabs = ({
                 {activeTab === 1 && (
                     <div className="mt-4">
                         {userInfo ? (
-                            <form onSubmit={submitHandler}>
+                            <form onSubmit={submitHandler} className="space-y-4">
                                 <div className="my-2">
-                                    <label htmlFor="rating" className="block text-lg font-medium">
+                                    <label htmlFor="rating" className="block text-lg font-medium text-[#5b3f15]">
                                         Rating
                                     </label>
                                     <select
@@ -57,7 +57,7 @@ const ProductTabs = ({
                                         required
                                         value={rating}
                                         onChange={(e) => setRating(e.target.value)}
-                                        className="p-2 border rounded-lg w-full text-black"
+                                        className="p-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-[#bd8837]"
                                     >
                                         <option value="">Select</option>
                                         <option value="1">Inferior</option>
@@ -69,7 +69,7 @@ const ProductTabs = ({
                                 </div>
 
                                 <div className="my-2">
-                                    <label htmlFor="comment" className="block text-lg font-medium">
+                                    <label htmlFor="comment" className="block text-lg font-medium text-[#5b3f15]">
                                         Comment
                                     </label>
                                     <textarea
@@ -78,20 +78,20 @@ const ProductTabs = ({
                                         required
                                         value={comment}
                                         onChange={(e) => setComment(e.target.value)}
-                                        className="p-2 border rounded-lg w-full text-black"
+                                        className="p-2 border rounded-lg w-full text-black focus:outline-none focus:ring-2 focus:ring-[#bd8837]"
                                     ></textarea>
                                 </div>
                                 <button
                                     type="submit"
                                     disabled={loadingProductReview}
-                                    className="bg-pink-500 text-white py-2 px-4 rounded-lg"
+                                    className="bg-[#5b3f15] text-white py-2 px-4 border border-[#5b3f15] rounded-lg hover:bg-white hover:text-[#5b3f15] transition-all duration-300"
                                 >
                                     Submit
                                 </button>
                             </form>
                         ) : (
                             <p>
-                                Please <Link to="/login" className="text-blue-500">sign in</Link> to write a review.
+                                Please <Link to="/login" className="text-[#5b3f15] hover:underline">sign in</Link> to write a review.
                             </p>
                         )}
                     </div>
@@ -103,10 +103,10 @@ const ProductTabs = ({
                             <p className="text-gray-500">No Reviews</p>
                         ) : (
                             product.reviews.map((review) => (
-                                <div key={review._id} className="border p-4 rounded-lg my-4 shadow-sm bg-gray-50">
+                                <div key={review._id} className="border p-4 rounded-lg my-4 shadow-sm bg-[#efe9e0]">
                                     <div className="flex justify-between items-center">
-                                        <strong className="text-gray-700">{review.name}</strong>
-                                        <p className="text-gray-500 text-sm">
+                                        <strong className="text-[#5b3f15]">{review.name}</strong>
+                                        <p className="text-[#bd8837] text-sm">
                                             {review.createdAt.substring(0, 10)}
                                         </p>
                                     </div>
