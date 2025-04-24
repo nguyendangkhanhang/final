@@ -8,7 +8,6 @@ import {
   useUpdateUserMutation,
 } from "@frontend/redux/api/usersApiSlice";
 import { toast } from "react-toastify";
-import AdminMenu from "./AdminMenu";
 import Pagination from '@frontend/components/Pagination';
 
 const UserList = () => {

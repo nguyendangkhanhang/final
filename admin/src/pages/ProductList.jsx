@@ -6,7 +6,6 @@ import {
 } from "@frontend/redux/api/productApiSlice";
 import { useFetchCategoriesQuery } from "@frontend/redux/api/categoryApiSlice";
 import { toast } from "react-toastify";
-import AdminMenu from "./AdminMenu";
 
 const sizesAvailable = ["S", "M", "L", "XL", "XXL"];
 

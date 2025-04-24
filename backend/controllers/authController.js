@@ -22,25 +22,32 @@ async function verifyGoogleToken(token){
 }
 
 const googleAuth = async (req, res) => {
-    const { token } = req.body;
-    const payload = await verifyGoogleToken(token);
-  
-    const { email, name, sub } = payload;
-  
-    let user = await User.findOne({ email });
-  
-    if (!user) {
-      user = await User.create({
-        username: email,
-        email,
-        googleId: sub,
-        isAdmin: false, // mặc định
-      });
-    }
-  
-    createToken(res, user._id); // tạo cookie jwt
-  
-    res.status(200).json({ user });
+  const { token } = req.body;
+  const payload = await verifyGoogleToken(token);
+
+  const { email, name, sub } = payload;
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    user = await User.create({
+      username: email,
+      email,
+      googleId: sub,
+      isAdmin: false,
+    });
+  }
+
+  const tokenString = createToken(res, user._id); // ✅ lưu token trả về
+
+  res.status(200).json({
+    user: {
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+    },
+    token: tokenString, // ✅ trả về token để frontend set vào localStorage
+  });
 };
+
 
 export default googleAuth;

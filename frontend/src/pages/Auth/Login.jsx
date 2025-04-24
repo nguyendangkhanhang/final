@@ -58,13 +58,14 @@ const Login = () => {
       
           const user = data.user;
       
-          // Chặn admin như login thường
           if (user.isAdmin) {
             toast.error("You are not authorized to access this application");
             return;
           }
       
-          dispatch(setCredentials(user)); // Dispatch login giống login thường
+          dispatch(setCredentials(user)); // ✅ set vào Redux
+          localStorage.setItem("token", data.token); // ✅ lưu token (nếu bạn return token từ backend)
+      
           navigate("/");
           toast.success("Login successful");
         } catch (err) {
@@ -99,7 +100,6 @@ const Login = () => {
               placeholder='Password' required
           />
           <div className='w-full flex justify-between text-sm mt-[-8px]'>
-              <p className='cursor-pointer'>Forgot your password?</p>
               <p>
                 New Customer? 
                 <Link to={redirect ? `/register?redirect=${redirect}` : "/register"} className='text-black hover:underline'> Register</Link>

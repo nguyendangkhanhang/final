@@ -6,7 +6,6 @@ import {
     useUpdateDiscountCodeMutation,
     useDeleteDiscountCodeMutation
 } from '@frontend/redux/api/discountApiSlice';
-import { resetDiscountState } from '@frontend/redux/features/discount/discountSlice';
 import { toast } from 'react-toastify';
 import { PencilSquareIcon, TrashIcon, PlusIcon } from '@heroicons/react/24/outline';
 import Pagination from '@frontend/components/Pagination';

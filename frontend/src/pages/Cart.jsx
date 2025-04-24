@@ -41,7 +41,7 @@ const Cart = () => {
 
   const handleSelectCoupon = (coupon) => {
     if (coupon.isUsed) {
-      toast.error('Mã giảm giá đã được sử dụng');
+      toast.error('Discount code has been used');
       return;
     }
     
@@ -51,12 +51,12 @@ const Cart = () => {
       couponId: coupon._id
     }));
     setShowCouponModal(false);
-    toast.success('Áp dụng mã giảm giá thành công');
+    toast.success('Discount code applied successfully');
   };
 
   const handleRemoveDiscount = () => {
     dispatch(clearDiscount());
-    toast.success('Đã xóa mã giảm giá');
+    toast.success('Discount code removed successfully');
   };
 
   const subtotal = calculateSubtotal(cartItems);

@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import HeartIcon from "./HeartIcon";
 import { formatPrice } from "../../Utils/cartUtils";
 const SmallProduct = ({ product }) => {
     return(

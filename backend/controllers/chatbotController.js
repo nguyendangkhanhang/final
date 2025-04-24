@@ -17,7 +17,7 @@ const getProductRecommendations = asyncHandler(async (req, res) => {
 
     if (products.length === 0) {
       return res.json({ 
-        message: "Xin lỗi, tôi không tìm thấy sản phẩm nào phù hợp với yêu cầu của bạn. / I'm sorry, I couldn't find any products matching your request.",
+        message: "I'm sorry, I couldn't find any products matching your request.",
         products: []
       });
     }
@@ -29,7 +29,7 @@ const getProductRecommendations = asyncHandler(async (req, res) => {
     }));
 
     return res.json({
-      message: "Đây là một số sản phẩm phù hợp với yêu cầu của bạn: / Here are some products that match your request:",
+      message: "Here are some products that match your request:",
       products: productList
     });
   } catch (error) {
@@ -46,13 +46,13 @@ const getOrderStatus = asyncHandler(async (req, res) => {
     
     if (!order) {
       return res.json({
-        message: "Xin lỗi, tôi không tìm thấy đơn hàng với mã số này. / I'm sorry, I couldn't find an order with this ID.",
+        message: "I'm sorry, I couldn't find an order with this ID.",
         order: null
       });
     }
 
     return res.json({
-      message: `Trạng thái đơn hàng của bạn là: ${order.status} / Your order status is: ${order.status}`,
+      message: `Your order status is: ${order.status}`,
       order: {
         status: order.status,
         totalPrice: order.totalPrice,
@@ -71,13 +71,13 @@ const getCategoryInfo = asyncHandler(async (req, res) => {
     
     if (categories.length === 0) {
       return res.json({
-        message: "Xin lỗi, tôi không tìm thấy danh mục nào. / I'm sorry, I couldn't find any categories.",
+        message: "I'm sorry, I couldn't find any categories.",
         categories: []
       });
     }
 
     return res.json({
-      message: "Đây là danh sách các danh mục sản phẩm: / Here are the product categories:",
+      message: "Here are the product categories:",
       categories: categories.map(c => c.name)
     });
   } catch (error) {

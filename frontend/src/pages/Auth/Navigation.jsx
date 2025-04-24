@@ -10,7 +10,6 @@ import {
 import { Link } from "react-router-dom";
 import "./Navigation.css";
 import { useSelector, useDispatch } from "react-redux";
-import FavoritesCount from "../Products/FavoritesCount";
 import {assets} from '../../assets/assets'
 
 const Navigation = () => {

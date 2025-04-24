@@ -8,11 +8,6 @@ import { formatPrice } from "../../Utils/cartUtils";
 const ProductCard = ({ p }) => {
   const dispatch = useDispatch();
 
-  const addToCartHandler = (product, qty) => {
-    dispatch(addToCart({ ...product, qty }));
-    toast.success("Item added successfully", { autoClose: 1500 });
-  };
-
   return (
     <div className="max-w-[280px] bg-white object-cover transition-transform duration-300 hover:scale-105">
       {/* Image Section */}

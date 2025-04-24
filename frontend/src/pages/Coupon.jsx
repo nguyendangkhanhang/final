@@ -6,8 +6,6 @@ import Loader from '../components/Loader';
 import CouponCard from '../components/CouponCard';
 import Title from '../components/Title'
 import ScrollAnimator from '../components/ScrollAnimator';
-import { assets } from '../assets/assets';
-import { FaTags } from 'react-icons/fa';
 
 // Define background patterns/textures if needed globally or inline
 const bannerBgStyle = {
@@ -29,15 +27,15 @@ const Coupon = () => {
 
   const handleSaveCoupon = async (discountCodeId) => {
     if (!userInfo) {
-      toast.error('Vui lòng đăng nhập để lưu mã giảm giá');
+      toast.error('Please login to save discount code');
       return;
     }
 
     try {
       await saveUserCoupon(discountCodeId).unwrap();
-      toast.success('Lưu mã giảm giá thành công');
+      toast.success('Save discount code successfully');
     } catch (error) {
-      toast.error(error?.data?.message || 'Có lỗi xảy ra');
+      toast.error(error?.data?.message || 'An error occurred');
     }
   };
 

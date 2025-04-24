@@ -7,29 +7,29 @@ const validateDiscountCodeData = (req) => {
     
     // Validate code
     if (!req.body.code || req.body.code.trim().length < 3 || req.body.code.trim().length > 20) {
-        errors.push({ field: 'code', message: 'Mã giảm giá phải có độ dài từ 3 đến 20 ký tự' });
+        errors.push({ field: 'code', message: 'Discount code must be between 3 and 20 characters' });
     }
 
     // Validate discountPercentage
     if (!req.body.discountPercentage || req.body.discountPercentage < 0 || req.body.discountPercentage > 100) {
-        errors.push({ field: 'discountPercentage', message: 'Phần trăm giảm giá phải từ 0 đến 100' });
+        errors.push({ field: 'discountPercentage', message: 'Discount percentage must be between 0 and 100' });
     }
 
     // Validate startDate
     if (!req.body.startDate || isNaN(new Date(req.body.startDate).getTime())) {
-        errors.push({ field: 'startDate', message: 'Ngày bắt đầu không hợp lệ' });
+        errors.push({ field: 'startDate', message: 'Invalid start date' });
     }
 
     // Validate endDate
     if (!req.body.endDate || isNaN(new Date(req.body.endDate).getTime())) {
-        errors.push({ field: 'endDate', message: 'Ngày kết thúc không hợp lệ' });
+        errors.push({ field: 'endDate', message: 'Invalid end date' });
     } else if (new Date(req.body.endDate) <= new Date(req.body.startDate)) {
-        errors.push({ field: 'endDate', message: 'Ngày kết thúc phải sau ngày bắt đầu' });
+        errors.push({ field: 'endDate', message: 'End date must be after start date' });
     }
 
     // Validate usageLimit
     if (!req.body.usageLimit || !Number.isInteger(req.body.usageLimit) || req.body.usageLimit < 1) {
-        errors.push({ field: 'usageLimit', message: 'Giới hạn sử dụng phải là số nguyên lớn hơn 0' });
+        errors.push({ field: 'usageLimit', message: 'Usage limit must be an integer greater than 0' });
     }
 
     return errors;
@@ -51,21 +51,21 @@ const validateDiscountCode = async (req, res) => {
         if (!discountCode) {
             return res.status(404).json({
                 success: false,
-                message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn'
+                message: 'Invalid discount code or expired'
             });
         }
 
         if (discountCode.usedCount >= discountCode.usageLimit) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá đã hết lượt sử dụng'
+                message: 'Discount code has reached its usage limit'
             });
         }
 
         if (orderAmount < discountCode.minimumOrderAmount) {
             return res.status(400).json({
                 success: false,
-                message: `Đơn hàng phải có giá trị tối thiểu ${discountCode.minimumOrderAmount}`
+                message: `Order must have a minimum value of ${discountCode.minimumOrderAmount}`
             });
         }
 
@@ -84,7 +84,7 @@ const validateDiscountCode = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Lỗi server',
+            message: 'Server error',
             error: error.message
         });
     }
@@ -106,7 +106,7 @@ const createDiscountCode = async (req, res) => {
         if (existingCode) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá đã tồn tại'
+                message: 'Discount code already exists'
             });
         }
 
@@ -123,7 +123,7 @@ const createDiscountCode = async (req, res) => {
         if (error.code === 11000) { // MongoDB duplicate key error
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá đã tồn tại'
+                message: 'Discount code already exists'
             });
         }
         res.status(500).json({
@@ -145,7 +145,7 @@ const getDiscountCodes = async (req, res) => {
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Lỗi server',
+            message: 'Server error',
             error: error.message
         });
     }
@@ -171,7 +171,7 @@ const updateDiscountCode = async (req, res) => {
         if (!discountCode) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy mã giảm giá'
+                message: 'Discount code not found'
             });
         }
 
@@ -196,18 +196,18 @@ const deleteDiscountCode = async (req, res) => {
         if (!discountCode) {
             return res.status(404).json({
                 success: false,
-                message: 'Không tìm thấy mã giảm giá'
+                message: 'Discount code not found'
             });
         }
 
         res.status(200).json({
             success: true,
-            message: 'Xóa mã giảm giá thành công'
+            message: 'Discount code deleted successfully'
         });
     } catch (error) {
         res.status(500).json({
             success: false,
-            message: 'Lỗi server',
+            message: 'Server error',
             error: error.message
         });
     }
@@ -222,7 +222,7 @@ const applyDiscountCode = async (req, res) => {
         if (!discountCode) {
             return res.status(404).json({
                 success: false,
-                message: 'Mã giảm giá không hợp lệ'
+                message: 'Invalid discount code'
             });
         }
 
@@ -238,14 +238,14 @@ const applyDiscountCode = async (req, res) => {
         if (now < startDate) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá chưa đến ngày áp dụng'
+                message: 'Discount code has not started yet'
             });
         }
 
         if (now > endDate) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá đã hết hạn'
+                message: 'Discount code has expired'
             });
         }
 
@@ -253,7 +253,7 @@ const applyDiscountCode = async (req, res) => {
         if (discountCode.usageCount >= discountCode.usageLimit) {
             return res.status(400).json({
                 success: false,
-                message: 'Mã giảm giá đã hết lượt sử dụng'
+                message: 'Discount code has reached its usage limit'
             });
         }
 
@@ -279,7 +279,7 @@ const applyDiscountCode = async (req, res) => {
         console.error('Error applying discount code:', error);
         res.status(500).json({
             success: false,
-            message: 'Lỗi server',
+            message: 'Server error',
             error: error.message
         });
     }

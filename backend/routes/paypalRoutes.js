@@ -28,8 +28,8 @@ const getPayPalAccessToken = async () => {
 
     return data.access_token;
   } catch (error) {
-    console.error("Lỗi lấy PayPal Access Token:", error.response?.data || error.message);
-    throw new Error("Không thể lấy Access Token từ PayPal");
+    console.error("Error getting PayPal Access Token:", error.response?.data || error.message);
+    throw new Error("Cannot get Access Token from PayPal");
   }
 };
 
@@ -37,10 +37,10 @@ const getPayPalAccessToken = async () => {
 router.post("/create-order", async (req, res) => {
   const { amount, orderId } = req.body;
 
-  console.log("📦 Tạo đơn PayPal với orderId:", orderId);
+  console.log("📦 Creating PayPal order with orderId:", orderId);
 
   if (!orderId) {
-    return res.status(400).json({ message: "Thiếu orderId trong yêu cầu." });
+    return res.status(400).json({ message: "Missing orderId in request." });
   }
 
   try {
@@ -59,8 +59,8 @@ router.post("/create-order", async (req, res) => {
           },
         ],
         application_context: {
-          return_url: `http://192.168.2.78:5000/api/paypal/success?orderId=${orderId}`,
-          cancel_url: "http://192.168.2.78:5000/api/paypal/cancel",
+          return_url: `http://192.168.1.63:5000/api/paypal/success?orderId=${orderId}`,
+          cancel_url: "http://192.168.1.63:5000/api/paypal/cancel",
           user_action: "PAY_NOW",
         },
       },
@@ -77,13 +77,13 @@ router.post("/create-order", async (req, res) => {
     const approvalUrl = data.links?.find(link => link.rel === "approve")?.href;
 
     if (!approvalUrl) {
-      throw new Error("Không tìm thấy approvalUrl từ PayPal API");
+      throw new Error("Cannot find approvalUrl from PayPal API");
     }
 
     res.json({ orderID: data.id, approvalUrl });
   } catch (error) {
-    console.error("Lỗi tạo đơn hàng PayPal:", error.response?.data || error.message);
-    res.status(500).json({ message: "Lỗi tạo đơn hàng PayPal" });
+    console.error("Error creating PayPal order:", error.response?.data || error.message);
+    res.status(500).json({ message: "Error creating PayPal order" });
   }
 });
 
@@ -91,11 +91,11 @@ router.post("/create-order", async (req, res) => {
 router.get("/success", async (req, res) => {
   const { token, orderId } = req.query;
 
-  console.log("📥 Callback PayPal /success với token:", token);
-  console.log("📥 orderId từ query:", orderId);
+  console.log("📥 PayPal callback /success with token:", token);
+  console.log("📥 orderId from query:", orderId);
 
   if (!token || !orderId) {
-    return res.status(400).send("Thiếu token hoặc orderId");
+    return res.status(400).send("Missing token or orderId");
   }
 
   try {
@@ -112,7 +112,7 @@ router.get("/success", async (req, res) => {
       }
     );
 
-    console.log("✅ Thanh toán thành công:", data);
+    console.log("✅ Payment successful:", data);
 
     const order = await Order.findById(orderId);
 
@@ -126,19 +126,19 @@ router.get("/success", async (req, res) => {
       };
       await order.save();
 
-      res.send("Thanh toán thành công! Cảm ơn bạn đã mua hàng.");
+      res.send("Payment successful! Thank you for your purchase.");
     } else {
-      res.status(404).send("Không tìm thấy đơn hàng.");
+      res.status(404).send("Order not found.");
     }
   } catch (error) {
-    console.error("❌ Lỗi xác nhận thanh toán:", error.response?.data || error.message);
-    res.status(500).send("Lỗi xác nhận thanh toán.");
+    console.error("❌ Error confirming payment:", error.response?.data || error.message);
+    res.status(500).send("Error confirming payment.");
   }
 });
 
 // Khi người dùng huỷ thanh toán
 router.get("/cancel", (req, res) => {
-  res.send("Bạn đã hủy thanh toán.");
+  res.send("You have cancelled the payment.");
 });
 
 export default router;

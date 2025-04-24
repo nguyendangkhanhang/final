@@ -17,16 +17,24 @@ const ChatForm = ({ chatHistory, setChatHistory, generateBotResponse }) => {
   };
 
   return (
-    <form onSubmit={handleFormSubmit} className="chat-form flex items-center p-3 rounded-2xl border border-gray-300 shadow-md">
+    <form 
+      onSubmit={handleFormSubmit} 
+      className="flex items-center gap-2"
+    >
       <input
         ref={inputRef}
         type="text"
-        placeholder="Message..."
-        className="message-input w-full py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 rounded-full"
+        placeholder="Type your message..."
+        className="flex-1 py-2 px-4 text-sm bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all duration-200"
         required
       />
-      <button type="submit" className="material-symbols-rounded text-xl text-white bg-purple-700 rounded-full p-2 ml-2 hover:bg-purple-800">
-        arrow_upward
+      <button 
+        type="submit" 
+        className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-all duration-200 hover:scale-110"
+      >
+        <span className="material-symbols-rounded text-xl">
+          arrow_upward
+        </span>
       </button>
     </form>
   );

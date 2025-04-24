@@ -37,7 +37,7 @@ const discountSlice = createSlice({
                 (action) => action.type.endsWith('/rejected'),
                 (state, action) => {
                     state.loading = false;
-                    state.error = action.payload?.message || 'Có lỗi xảy ra';
+                    state.error = action.payload?.message || 'An error occurred';
                 }
             );
     }

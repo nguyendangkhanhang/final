@@ -1,6 +1,5 @@
 import { Link } from "react-router-dom";
-import HeartIcon from "./HeartIcon";
-import { formatPrice } from "../../Utils/cartUtils"; // đảm bảo đường dẫn đúng với file của bạn
+import { formatPrice } from "../../Utils/cartUtils";
 
 const Product = ({ product }) => {
   return (
@@ -11,7 +10,6 @@ const Product = ({ product }) => {
           alt={product.name}
           className="w-[30rem] rounded"
         />
-        <HeartIcon product={product} />
       </div>
 
       <div className="p-4">

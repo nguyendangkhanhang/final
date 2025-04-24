@@ -3,7 +3,6 @@ import Message from "@frontend/components/Message";
 import Loader from "@frontend/components/Loader";
 import { Link } from "react-router-dom";
 import { useGetOrdersQuery, useUpdateOrderStatusMutation } from "@frontend/redux/api/orderApiSlice";
-import AdminMenu from "./AdminMenu";
 import Pagination from '@frontend/components/Pagination';
 import { formatPrice } from "@frontend/Utils/cartUtils";
 import { PencilSquareIcon } from '@heroicons/react/24/outline';

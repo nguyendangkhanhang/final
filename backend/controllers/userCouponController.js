@@ -18,7 +18,7 @@ export const saveUserCoupon = async (req, res) => {
     if (!discountCode) {
       return res.status(404).json({
         success: false,
-        message: 'Mã giảm giá không hợp lệ hoặc đã hết hạn'
+        message: 'Invalid discount code or expired'
       });
     }
 
@@ -31,7 +31,7 @@ export const saveUserCoupon = async (req, res) => {
     if (existingCoupon) {
       return res.status(400).json({
         success: false,
-        message: 'Bạn đã lưu mã giảm giá này rồi'
+        message: 'You have already saved this discount code'
       });
     }
 
@@ -48,7 +48,7 @@ export const saveUserCoupon = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi server',
+      message: 'Server error',
       error: error.message
     });
   }
@@ -70,7 +70,7 @@ export const getUserCoupons = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi server',
+      message: 'Server error',
       error: error.message
     });
   }
@@ -91,7 +91,7 @@ export const markCouponAsUsed = async (req, res) => {
     if (!userCoupon) {
       return res.status(404).json({
         success: false,
-        message: 'Không tìm thấy mã giảm giá'
+        message: 'Discount code not found'
       });
     }
 
@@ -102,7 +102,7 @@ export const markCouponAsUsed = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      message: 'Lỗi server',
+      message: 'Server error',
       error: error.message
     });
   }
