@@ -1,5 +1,5 @@
 import { Link, useParams } from "react-router-dom";
-import { useGetProductsQuery } from "../redux/api/productApiSlice";
+import { useGetNewProductsQuery } from "../redux/api/productApiSlice";
 import { useGetDiscountCodesQuery } from "../redux/api/discountApiSlice";
 import Loader from "../components/Loader";
 import Message from "../components/Message";
@@ -23,7 +23,7 @@ import Title from '../components/Title'
 
 const Home = () => {
   const { keyword } = useParams();
-  const { data, isLoading, isError } = useGetProductsQuery({ keyword });
+  const { data, isLoading, isError } = useGetNewProductsQuery();
   const { data: discountData, isLoading: discountLoading } = useGetDiscountCodesQuery();
   const [saveUserCoupon] = useSaveUserCouponMutation();
   const { userInfo } = useSelector((state) => state.auth);
@@ -156,11 +156,11 @@ const Home = () => {
       ) : (
         <ScrollAnimator>
           <div className='text-5xl text-center pt-10'>
-              <Title text1={'PRODUCTS'} text2={'LIST'} />
+              <Title text1={'NEW'} text2={'ARRIVALS'} />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-4 mt-[2rem] px-8 max-w-[1200px] mx-auto ">
-            {data.products.map((product) => (
+            {data?.map((product) => (
               <Product key={product._id} product={product} />
             ))}
           </div>

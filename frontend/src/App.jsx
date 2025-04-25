@@ -23,6 +23,10 @@ const App = () => {
     }
   }, [dispatch]);
 
+  useEffect(() => {
+    localStorage.removeItem("cart"); // ⚠️ Xóa 1 lần thôi
+  }, []);
+
   return (
     <>
       <ToastContainer />

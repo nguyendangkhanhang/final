@@ -1,6 +1,7 @@
+import React from "react";
 import { FaRegStar, FaStar, FaStarHalfAlt } from "react-icons/fa";
 
-const Ratings = ({ value, text, color }) => {
+const Ratings = ({ value = 0, text = "", color = "yellow-500" }) => {
   const fullStars = Math.floor(value);
   const halfStars = value - fullStars > 0.5 ? 1 : 0;
   const emptyStar = 5 - fullStars - halfStars;
@@ -21,10 +22,6 @@ const Ratings = ({ value, text, color }) => {
       </span>
     </div>
   );
-};
-
-Ratings.defaultProps = {
-  color: "yellow-500",
 };
 
 export default Ratings;

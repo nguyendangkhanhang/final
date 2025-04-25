@@ -11,20 +11,36 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const { user, rating, numReviews, reviews, ...item } = action.payload;
-      const existItem = state.cartItems.find((x) => x._id === item._id);
-
+    
+      // Đảm bảo _id và product đều có
+      const itemWithProduct = {
+        ...item,
+        _id: item._id || item.product,
+        product: item._id || item.product,
+      };
+    
+      const existItem = state.cartItems.find(
+        (x) => x._id === itemWithProduct._id && x.selectedSize === itemWithProduct.selectedSize
+      );
+    
       if (existItem) {
         state.cartItems = state.cartItems.map((x) =>
-          x._id === existItem._id ? { ...item, countInStock: x.countInStock } : x
+          x._id === existItem._id && x.selectedSize === existItem.selectedSize
+            ? { ...itemWithProduct, countInStock: x.countInStock }
+            : x
         );
       } else {
-        state.cartItems = [...state.cartItems, { ...item, countInStock: item.quantity }];
+        state.cartItems = [...state.cartItems, { ...itemWithProduct, countInStock: item.quantity }];
       }
-      return updateCart(state, item);
+    
+      return updateCart(state, itemWithProduct);
     },
 
     removeFromCart: (state, action) => {
-      state.cartItems = state.cartItems.filter((x) => x._id !== action.payload);
+      const { id, selectedSize } = action.payload;
+      state.cartItems = state.cartItems.filter(
+        (x) => x.product !== id || x.selectedSize !== selectedSize
+      );
       return updateCart(state);
     },
 

@@ -21,6 +21,10 @@ const productSchema = mongoose.Schema(
     image: { type: String, required: true },
     brand: { type: String, required: true },
     quantity: { type: Number, required: true },
+    sizeQuantities: { 
+      type: Object,
+      default: {}
+    },
     category: { type: ObjectId, ref: "Category", required: true },
     description: { type: String, required: true },
     size: { type: Array, required: true },

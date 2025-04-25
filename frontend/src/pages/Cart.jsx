@@ -30,9 +30,9 @@ const Cart = () => {
     dispatch(addToCart({ ...item, qty }));
   };
 
-  const removeFromCartHandler = (id) => {
+  const removeFromCartHandler = (id, selectedSize) => {
     // Only remove from cart, don't update product quantity
-    dispatch(removeFromCart(id));
+    dispatch(removeFromCart({ id: id, selectedSize }));
   };
 
   const checkoutHandler = () => {
@@ -110,7 +110,7 @@ const Cart = () => {
                   <table className="min-w-full divide-y divide-gray-200">
                     <tbody className="bg-white divide-y divide-gray-200">
                       {cartItems.map((item) => (
-                        <tr key={item._id} className="hover:bg-gray-50">
+                        <tr key={`${item._id}-${item.selectedSize}`} className="hover:bg-gray-50">
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <img
@@ -141,20 +141,22 @@ const Cart = () => {
                               value={item.qty}
                               onChange={(e) => addToCartHandler(item, Number(e.target.value))}
                             >
-                              {[...Array(item.countInStock).keys()].map((x) => (
+                              {[...Array(item.sizeQuantities?.[item.selectedSize] || 0).keys()].map((x) => (
                                 <option key={x + 1} value={x + 1}>
                                   {x + 1}
                                 </option>
                               ))}
                             </select>
-                            <p className="text-xs text-gray-500 mt-1">Max: {item.countInStock}</p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Max: {item.sizeQuantities?.[item.selectedSize] || 0}
+                            </p>
                           </td>
                           <td className="px-6 py-4 text-base font-medium text-gray-900">
                             {formatPrice(item.qty * item.price)}
                           </td>
                           <td className="px-6 py-4">
                             <button
-                              onClick={() => removeFromCartHandler(item._id)}
+                              onClick={() => removeFromCartHandler(item.product, item.selectedSize)}
                               className="p-2 text-gray-400 hover:text-red-500 transition-colors duration-200"
                               title="Remove item"
                             >

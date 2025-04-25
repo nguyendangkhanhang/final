@@ -11,26 +11,61 @@ const sizesAvailable = ["S", "M", "L", "XL", "XXL"];
 
 const ProductList = () => {
   const [image, setImage] = useState("");
+  const [imageUrl, setImageUrl] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
   const [brand, setBrand] = useState("");
   const [size, setSize] = useState([]);
-  const [imageUrl, setImageUrl] = useState(null);
-  const navigate = useNavigate();
+  const [quantity, setQuantity] = useState({});
 
+  const navigate = useNavigate();
   const [uploadProductImage] = useUploadProductImageMutation();
   const [createProduct] = useCreateProductMutation();
   const { data: categories } = useFetchCategoriesQuery();
 
   const handleSizeChange = (sizeValue) => {
-    setSize((prevSizes) =>
-      prevSizes.includes(sizeValue)
-        ? prevSizes.filter((s) => s !== sizeValue)
-        : [...prevSizes, sizeValue]
-    );
+    setSize((prevSizes) => {
+      if (prevSizes.includes(sizeValue)) {
+        const newSizes = prevSizes.filter((s) => s !== sizeValue);
+        setQuantity((prev) => {
+          const updated = { ...prev };
+          delete updated[sizeValue];
+          return updated;
+        });
+        return newSizes;
+      } else {
+        setQuantity((prev) => ({ ...prev, [sizeValue]: 0 }));
+        return [...prevSizes, sizeValue];
+      }
+    });
+  };
+
+  const handleQuantityChange = (size, value) => {
+    setQuantity((prev) => ({
+      ...prev,
+      [size]: parseInt(value) || 0,
+    }));
+  };
+
+  const uploadFileHandler = async (e) => {
+    const formData = new FormData();
+    formData.append("image", e.target.files[0]);
+
+    try {
+      const res = await uploadProductImage(formData).unwrap();
+      toast.success("Image uploaded successfully");
+
+      const fullImageUrl = res.image.startsWith("/uploads")
+        ? `http://localhost:5000${res.image.replace(/\\/g, "/")}`
+        : res.image;
+
+      setImage(res.image);
+      setImageUrl(fullImageUrl);
+    } catch (error) {
+      toast.error("Image upload failed");
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -53,40 +88,23 @@ const ProductList = () => {
       productData.append("description", description);
       productData.append("price", price);
       productData.append("category", category);
-      productData.append("quantity", quantity);
       productData.append("brand", brand);
       productData.append("size", JSON.stringify(size));
 
+      const totalQuantity = size.reduce((sum, s) => sum + (quantity[s] || 0), 0);
+      productData.append("quantity", totalQuantity);
+
+      const sizeQuantities = {};
+      size.forEach((s) => {
+        sizeQuantities[s] = quantity[s] || 0;
+      });
+      productData.append("sizeQuantities", JSON.stringify(sizeQuantities));
+
       const { data } = await createProduct(productData);
-
-      if (data.error) {
-        toast.error("Product creation failed. Try again.");
-      } else {
-        toast.success(`${data.name} is created`);
-        navigate("/");
-      }
+      toast.success(`${data.name} is created`);
+      navigate("/admin/allproductslist");
     } catch (error) {
-      console.error("Error creating product:", error);
       toast.error("Product creation failed. Try again.");
-    }
-  };
-
-  const uploadFileHandler = async (e) => {
-    const formData = new FormData();
-    formData.append("image", e.target.files[0]);
-
-    try {
-      const res = await uploadProductImage(formData).unwrap();
-      toast.success(res.message);
-
-      const fullImageUrl = res.image.startsWith("/uploads")
-        ? `http://localhost:5000${res.image.replace(/\\/g, "/")}`
-        : res.image;
-
-      setImage(res.image);
-      setImageUrl(fullImageUrl);
-    } catch (error) {
-      toast.error(error?.data?.message || error.error);
     }
   };
 
@@ -141,7 +159,7 @@ const ProductList = () => {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                    className="mt-1 block w-full p-2 border border-[#5b3f15]"
                     required
                   />
                 </div>
@@ -152,41 +170,17 @@ const ProductList = () => {
                     type="number"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                    className="mt-1 block w-full p-2 border border-[#5b3f15]"
                     required
                   />
                 </div>
 
-                <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15]">Quantity</label>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15]">Brand</label>
-                  <input
-                    type="text"
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
                 <div>
                   <label className="block text-lg font-semibold text-[#5b3f15]">Category</label>
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                    className="mt-1 block w-full p-2 border border-[#5b3f15]"
                     required
                   >
                     <option value="">Select category</option>
@@ -199,11 +193,23 @@ const ProductList = () => {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15] mb-2">Sizes</label>
-                  <div className="flex flex-wrap gap-2">
-                    {sizesAvailable.map((s) => (
+                  <label className="block text-lg font-semibold text-[#5b3f15]">Brand</label>
+                  <input
+                    type="text"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    className="mt-1 block w-full p-2 border border-[#5b3f15]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <label className="block text-lg font-semibold text-[#5b3f15] mb-2">Sizes and Quantities</label>
+                <div className="space-y-2">
+                  {sizesAvailable.map((s) => (
+                    <div key={s} className="grid grid-cols-[80px_1fr] items-center gap-2">
                       <button
-                        key={s}
                         type="button"
                         onClick={() => handleSizeChange(s)}
                         className={`px-4 py-2 rounded-full text-lg font-semibold transition-colors ${
@@ -214,8 +220,18 @@ const ProductList = () => {
                       >
                         {s}
                       </button>
-                    ))}
-                  </div>
+                      {size.includes(s) && (
+                        <input
+                          type="number"
+                          min="0"
+                          value={quantity[s] || 0}
+                          onChange={(e) => handleQuantityChange(s, e.target.value)}
+                          className="w-20 p-2 border border-[#5b3f15] rounded-lg"
+                          placeholder="Qty"
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -226,7 +242,7 @@ const ProductList = () => {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows="4"
-                className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                className="mt-1 block w-full p-2 border border-[#5b3f15]"
                 required
               />
             </div>
@@ -234,7 +250,7 @@ const ProductList = () => {
             <div className="flex justify-end">
               <button
                 type="submit"
-                className="bg-[#bd8837] text-white px-6 py-2 rounded-lg hover:bg-[#5b3f15] transition-colors duration-200"
+                className="bg-[#bd8837] text-white px-6 py-2 rounded-lg hover:bg-[#5b3f15]"
               >
                 Create Product
               </button>

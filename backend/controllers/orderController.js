@@ -55,9 +55,12 @@ const createOrder = async (req, res) => {
 
       const order = new Order({
         orderItems: orderItems.map((x) => ({
-          ...x,
-          product: x._id,
-          _id: undefined,
+          name: x.name,
+          qty: x.qty,
+          image: x.image,
+          price: x.price,
+          product: x.product,
+          selectedSize: x.selectedSize,
         })),
         user: req.user._id,
         shippingAddress,
@@ -176,7 +179,19 @@ const markOrderAsPaid = async (req, res) => {
       for (const item of order.orderItems) {
         const product = await Product.findById(item.product);
         if (product) {
-          product.quantity -= item.qty;
+          // Update size quantity
+          if (product.sizeQuantities && product.sizeQuantities[item.selectedSize] !== undefined) {
+            const currentSizeQty = product.sizeQuantities[item.selectedSize];
+            if (currentSizeQty < item.qty) {
+              throw new Error(`Not enough quantity for size ${item.selectedSize} of product ${item.name}`);
+            }
+            product.sizeQuantities[item.selectedSize] = currentSizeQty - item.qty;
+          }
+
+          // Update total quantity
+          const totalSizeQuantities = Object.values(product.sizeQuantities).reduce((sum, qty) => sum + qty, 0);
+          product.quantity = totalSizeQuantities;
+          
           await product.save();
         }
       }
@@ -232,6 +247,25 @@ const updateStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
+    // Nếu đơn hàng bị hủy, hoàn trả số lượng sản phẩm
+    if (status === "Cancelled") {
+      for (const item of order.orderItems) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          // Hoàn trả tổng số lượng
+          product.quantity += item.qty;
+          
+          // Hoàn trả số lượng theo size
+          if (product.sizeQuantities && product.sizeQuantities.has(item.selectedSize)) {
+            const currentSizeQty = product.sizeQuantities.get(item.selectedSize);
+            product.sizeQuantities.set(item.selectedSize, currentSizeQty + item.qty);
+          }
+          
+          await product.save();
+        }
+      }
+    }
+
     // Nếu trạng thái mới là "Delivered" và phương thức thanh toán là "Cash on Delivery"
     if (status === "Delivered" && order.paymentMethod === "Cash on Delivery" && !order.isPaid) {
       order.isPaid = true;
@@ -248,22 +282,6 @@ const updateStatus = async (req, res) => {
   }
 };
 
-// const getOrderStatusById = async (req, res) => {
-//   try {
-//     const orderId = req.params.id;
-//     const order = await Order.findById(orderId);
-
-//     if (order) {
-//       res.json({ status: order.status, message: `Order status for ${orderId}: ${order.status}` });
-//     } else {
-//       res.status(404);
-//       throw new Error("Order not found");
-//     }
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
-
 export {
   createOrder,
   getAllOrders,
@@ -275,5 +293,4 @@ export {
   markOrderAsPaid,
   markOrderAsDelivered,
   updateStatus,
-  // getOrderStatusById,
 };

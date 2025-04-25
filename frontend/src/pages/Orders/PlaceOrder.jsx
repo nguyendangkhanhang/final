@@ -36,19 +36,29 @@ const PlaceOrder = () => {
 
   const placeOrderHandler = async () => {
     try {
-      // Update product quantities
-      for (const item of cart.cartItems) {
-        await updateProductQuantity({
-          productId: item._id,
-          quantity: item.countInStock - item.qty,
-        }).unwrap();
-      }
-
-      const res = await createOrder({
-        orderItems: cart.cartItems.map((item) => ({
-          ...item,
+      console.log('Cart items before validation:', cart.cartItems);
+  
+      const validatedOrderItems = cart.cartItems.map((item) => {
+        const id = item._id || item.product;
+  
+        if (!id) {
+          throw new Error(`Product ID is missing for item: ${item.name}`);
+        }
+  
+        return {
+          name: item.name,
+          qty: item.qty,
           image: Array.isArray(item.image) ? item.image[0] : item.image,
-        })),
+          price: item.price,
+          product: id,
+          selectedSize: item.selectedSize,
+        };
+      });
+  
+      console.log("Validated Order Items to send:", validatedOrderItems);
+  
+      const res = await createOrder({
+        orderItems: validatedOrderItems,
         shippingAddress: cart.shippingAddress,
         paymentMethod: cart.paymentMethod,
         itemsPrice: Number(subtotal),
@@ -57,19 +67,47 @@ const PlaceOrder = () => {
         couponId: cart.discount?.couponId,
         discountPercentage: cart.discount?.discountPercentage || 0,
       }).unwrap();
+  
+      // Update quantities
+      const productUpdates = {};
 
-      if (cart.discount?.couponId) {
-        try {
-          await markCouponAsUsed(cart.discount.couponId).unwrap();
-        } catch (error) {
-          console.error('Lỗi khi đánh dấu mã giảm giá:', error);
+      for (const item of cart.cartItems) {
+        const pid = item._id || item.product;
+
+        if (!productUpdates[pid]) {
+          productUpdates[pid] = {
+            sizeQuantities: { ...item.sizeQuantities },
+          };
         }
+
+        const currentQty = productUpdates[pid].sizeQuantities[item.selectedSize] || 0;
+        if (currentQty < item.qty) {
+          throw new Error(`Not enough stock for size ${item.selectedSize}`);
+        }
+
+        productUpdates[pid].sizeQuantities[item.selectedSize] = currentQty - item.qty;
       }
 
+      // Sau đó gọi update 1 lần cho từng sản phẩm
+      for (const pid of Object.keys(productUpdates)) {
+        const sizeQuantities = productUpdates[pid].sizeQuantities;
+        const totalQty = Object.values(sizeQuantities).reduce((sum, qty) => sum + qty, 0);
+
+        await updateProductQuantity({
+          productId: pid,
+          quantity: totalQty,
+          sizeQuantities,
+        });
+      }
+  
+      if (cart.discount?.couponId) {
+        await markCouponAsUsed(cart.discount.couponId).unwrap();
+      }
+  
       dispatch(clearCartItems());
       navigate(`/order/${res._id}`);
     } catch (error) {
-      toast.error(error);
+      toast.error(error?.data?.message || error.message || "Có lỗi xảy ra khi đặt hàng");
     }
   };
 

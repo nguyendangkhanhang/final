@@ -3,25 +3,57 @@ import Product from "../models/productModel.js";
 
 const addProduct = asyncHandler(async (req, res) => {
   try {
-    let { name, description, price, category, quantity, brand, size, image } = req.fields;
+    let { name, description, price, category, quantity, brand, size, image, sizeQuantities } = req.fields;
 
     console.log("Received data:", req.fields); // Debug dữ liệu nhận từ frontend
 
-    // 🛠 Kiểm tra nếu `size` là chuỗi JSON, cần parse thành mảng
+    // Parse size nếu là JSON string
     if (typeof size === "string") {
       try {
-        size = JSON.parse(size); // Chuyển JSON string thành array
+        size = JSON.parse(size);
       } catch (error) {
         return res.status(400).json({ error: "Invalid size format" });
       }
     }
 
-    // 🛠 Đảm bảo `size` là mảng hợp lệ, không chứa `null`
+    // Parse sizeQuantities nếu là JSON string
+    if (typeof sizeQuantities === "string") {
+      try {
+        sizeQuantities = JSON.parse(sizeQuantities);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid sizeQuantities format" });
+      }
+    }
+
+    // Validate size array
     if (!Array.isArray(size) || size.length === 0 || size.some(s => s === null || s === "")) {
       return res.status(400).json({ error: "Size must be a non-empty array and cannot contain null values" });
     }
 
-    const product = new Product({ name, description, price, category, quantity, brand, size, image });
+    // Validate sizeQuantities
+    if (sizeQuantities) {
+      for (const [key, value] of Object.entries(sizeQuantities)) {
+        if (!size.includes(key)) {
+          return res.status(400).json({ error: `Size ${key} in sizeQuantities does not exist in size array` });
+        }
+        if (typeof value !== 'number' || value < 0) {
+          return res.status(400).json({ error: `Quantity for size ${key} must be a non-negative number` });
+        }
+      }
+    }
+
+    const product = new Product({ 
+      name, 
+      description, 
+      price, 
+      category, 
+      quantity, 
+      brand, 
+      size, 
+      image,
+      sizeQuantities: sizeQuantities || {}
+    });
+    
     await product.save();
     res.json(product);
   } catch (error) {
@@ -32,9 +64,9 @@ const addProduct = asyncHandler(async (req, res) => {
 
 const updateProductDetails = asyncHandler(async (req, res) => {
   try {
-    let { name, description, price, category, quantity, brand, size, image } = req.fields;
+    let { name, description, price, category, quantity, brand, size, image, sizeQuantities } = req.fields;
 
-    // 🛠 Parse size nếu là JSON string
+    // Parse size nếu là JSON string
     if (typeof size === "string") {
       try {
         size = JSON.parse(size);
@@ -43,7 +75,16 @@ const updateProductDetails = asyncHandler(async (req, res) => {
       }
     }
 
-    // ✅ Validate lại
+    // Parse sizeQuantities nếu là JSON string
+    if (typeof sizeQuantities === "string") {
+      try {
+        sizeQuantities = JSON.parse(sizeQuantities);
+      } catch (error) {
+        return res.status(400).json({ error: "Invalid sizeQuantities format" });
+      }
+    }
+
+    // Validate các trường bắt buộc
     switch (true) {
       case !name:
         return res.json({ error: "Name is required" });
@@ -61,7 +102,19 @@ const updateProductDetails = asyncHandler(async (req, res) => {
         return res.json({ error: "Quantity is required" });
     }
 
-    // Tạo object update với tất cả các trường
+    // Validate sizeQuantities
+    if (sizeQuantities) {
+      for (const [key, value] of Object.entries(sizeQuantities)) {
+        if (!size.includes(key)) {
+          return res.status(400).json({ error: `Size ${key} in sizeQuantities does not exist in size array` });
+        }
+        if (typeof value !== 'number' || value < 0) {
+          return res.status(400).json({ error: `Quantity for size ${key} must be a non-negative number` });
+        }
+      }
+    }
+
+    // Tạo object update
     const updateData = {
       name,
       description,
@@ -69,10 +122,11 @@ const updateProductDetails = asyncHandler(async (req, res) => {
       category,
       quantity,
       brand,
-      size
+      size,
+      sizeQuantities: sizeQuantities || undefined
     };
 
-    // Nếu có image mới, thêm vào updateData
+    // Thêm image nếu có
     if (image) {
       updateData.image = image;
     }
@@ -207,7 +261,7 @@ const fetchTopProducts = asyncHandler(async (req, res) => {
 
 const fetchNewProducts = asyncHandler(async (req, res) => {
   try {
-    const products = await Product.find().sort({ _id: -1 }).limit(5);
+    const products = await Product.find().sort({ _id: -1 }).limit(6);
     res.json(products);
   } catch (error) {
     console.error(error);
@@ -236,12 +290,29 @@ const filterProducts = asyncHandler(async (req, res) => {
 // @access  Private/Admin
 const updateProductQuantity = async (req, res) => {
   try {
-    const { quantity } = req.body;
+    const { quantity, sizeQuantities } = req.body;
 
     const product = await Product.findById(req.params.id);
 
     if (product) {
-      product.quantity = quantity;
+      if (sizeQuantities) {
+        for (const [key, value] of Object.entries(sizeQuantities)) {
+          if (!product.size.includes(key)) {
+            return res.status(400).json({ error: `Size ${key} does not exist in product sizes` });
+          }
+          if (typeof value !== 'number' || value < 0) {
+            return res.status(400).json({ error: `Quantity for size ${key} must be a non-negative number` });
+          }
+        }
+        product.sizeQuantities = sizeQuantities;
+        
+        // Update total quantity based on size quantities
+        const totalSizeQuantities = Object.values(sizeQuantities).reduce((sum, qty) => sum + qty, 0);
+        product.quantity = totalSizeQuantities;
+      } else if (quantity !== undefined) {
+        product.quantity = quantity;
+      }
+
       const updatedProduct = await product.save();
       res.json(updatedProduct);
     } else {

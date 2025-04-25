@@ -28,10 +28,9 @@ const ProductUpdate = () => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
   const [brand, setBrand] = useState("");
   const [size, setSize] = useState([]);
-
+  const [quantity, setQuantity] = useState({});
 
   useEffect(() => {
     if (productData) {
@@ -39,9 +38,17 @@ const ProductUpdate = () => {
       setDescription(productData.description || "");
       setPrice(productData.price || "");
       setCategory(productData.category?._id || "");
-      setQuantity(productData.quantity || "");
       setBrand(productData.brand || "");
       setSize(productData.size || []);
+      
+      // Khởi tạo quantity từ sizeQuantities
+      if (productData.sizeQuantities) {
+        const initialQuantities = {};
+        productData.size.forEach(s => {
+          initialQuantities[s] = productData.sizeQuantities[s] || 0;
+        });        
+        setQuantity(initialQuantities);
+      }
       
       const fullImageUrl = productData.image?.startsWith("/uploads")
         ? `http://localhost:5000${productData.image.replace(/\\/g, "/")}`
@@ -51,7 +58,30 @@ const ProductUpdate = () => {
       setImageUrl(fullImageUrl);
     }
   }, [productData]);
-  
+
+  const handleSizeChange = (sizeValue) => {
+    setSize((prevSizes) => {
+      if (prevSizes.includes(sizeValue)) {
+        const newSizes = prevSizes.filter((s) => s !== sizeValue);
+        setQuantity(prev => {
+          const newQuantity = { ...prev };
+          delete newQuantity[sizeValue];
+          return newQuantity;
+        });
+        return newSizes;
+      } else {
+        setQuantity(prev => ({ ...prev, [sizeValue]: 0 }));
+        return [...prevSizes, sizeValue];
+      }
+    });
+  };
+
+  const handleQuantityChange = (size, value) => {
+    setQuantity(prev => ({
+      ...prev,
+      [size]: parseInt(value) || 0
+    }));
+  };
 
   const uploadFileHandler = async (e) => {
     const formData = new FormData();
@@ -82,9 +112,20 @@ const ProductUpdate = () => {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("category", category);
-      formData.append("quantity", quantity);
       formData.append("brand", brand);
       formData.append("size", JSON.stringify(size));
+      
+      // Tính tổng số lượng
+      const totalQuantity = size.reduce((total, s) => total + (quantity[s] || 0), 0);
+      formData.append("quantity", totalQuantity);
+
+      // Thêm số lượng cho từng size
+      const sizeQuantities = {};
+      size.forEach(s => {
+        sizeQuantities[s] = quantity[s] || 0;
+      });
+      formData.append("sizeQuantities", JSON.stringify(sizeQuantities));
+
       const { data } = await updateProduct({ productId: _id, formData });
 
       if (data.error) {
@@ -109,14 +150,6 @@ const ProductUpdate = () => {
     } catch (error) {
       toast.error("Delete failed. Try Again.");
     }
-  };
-
-  const handleSizeChange = (sizeValue) => {
-    setSize((prevSizes) =>
-      prevSizes.includes(sizeValue)
-        ? prevSizes.filter((s) => s !== sizeValue)
-        : [...prevSizes, sizeValue]
-    );
   };
 
   return (
@@ -187,30 +220,6 @@ const ProductUpdate = () => {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15]">Quantity</label>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15]">Brand</label>
-                  <input
-                    type="text"
-                    value={brand}
-                    onChange={(e) => setBrand(e.target.value)}
-                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
                   <label className="block text-lg font-semibold text-[#5b3f15]">Category</label>
                   <select
                     value={category}
@@ -228,21 +237,45 @@ const ProductUpdate = () => {
                 </div>
 
                 <div>
-                  <label className="block text-lg font-semibold text-[#5b3f15] mb-2">Sizes</label>
-                  <div className="flex flex-wrap gap-2">
+                  <label className="block text-lg font-semibold text-[#5b3f15]">Brand</label>
+                  <input
+                    type="text"
+                    value={brand}
+                    onChange={(e) => setBrand(e.target.value)}
+                    className="mt-1 block w-full p-2 border border-[#5b3f15] shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-lg font-semibold text-[#5b3f15] mb-2">Sizes and Quantities</label>
+                  <div className="space-y-2">
                     {sizesAvailable.map((s) => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => handleSizeChange(s)}
-                        className={`px-4 py-2 rounded-full text-lg font-semibold transition-colors ${
-                          size.includes(s)
-                            ? "bg-[#bd8837] text-white"
-                            : "bg-gray-200 text-[#5b3f15] hover:bg-gray-300"
-                        }`}
-                      >
-                        {s}
-                      </button>
+                      <div key={s} className="grid grid-cols-[80px_1fr] items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleSizeChange(s)}
+                          className={`px-4 py-2 rounded-full text-lg font-semibold transition-colors ${
+                            size.includes(s)
+                              ? "bg-[#bd8837] text-white"
+                              : "bg-gray-200 text-[#5b3f15] hover:bg-gray-300"
+                          }`}
+                        >
+                          {s}
+                        </button>
+                        {size.includes(s) && (
+                          <input
+                            type="number"
+                            min="0"
+                            value={quantity[s] || 0}
+                            onChange={(e) => handleQuantityChange(s, e.target.value)}
+                            className="w-20 p-2 border border-[#5b3f15] rounded-lg shadow-sm focus:border-[#bd8837] focus:ring-[#bd8837]"
+                            placeholder="Qty"
+                          />
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -260,11 +293,11 @@ const ProductUpdate = () => {
               />
             </div>
 
-            <div className="flex justify-end space-x-4">
+            <div className="flex justify-end gap-4">
               <button
                 type="button"
                 onClick={handleDelete}
-                className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                className="bg-red-500 text-white px-6 py-2 rounded-lg hover:bg-red-600 transition-colors duration-200"
               >
                 Delete Product
               </button>

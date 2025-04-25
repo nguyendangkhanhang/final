@@ -5,7 +5,7 @@ export const formatPrice = (price) => {
     currency: 'VND',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(price).replace('₫', 'đ');
+  }).format(price);
 };
 
 // Tính tổng phụ (giá * số lượng)

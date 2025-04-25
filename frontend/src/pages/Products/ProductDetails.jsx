@@ -63,13 +63,27 @@ const ProductDetails = () => {
       return;
     }
 
-    if (product.quantity === 0) {
-      toast.error("This product is out of stock");
+    const sizeQuantity = product.sizeQuantities?.[selectedSize] || 0;
+    if (sizeQuantity === 0) {
+      toast.error("This size is out of stock");
       return;
     }
 
-    if (qty > product.quantity) {
-      toast.error(`Only ${product.quantity} item(s) left in stock`);
+    // Kiểm tra xem đã có sản phẩm này trong giỏ hàng chưa
+    const cartItems = JSON.parse(localStorage.getItem("cart"))?.cartItems || [];
+    const existingItem = cartItems.find(
+      (item) => item._id === product._id && item.selectedSize === selectedSize
+    );
+
+    // Nếu đã có trong giỏ hàng, kiểm tra tổng số lượng
+    if (existingItem) {
+      const totalQty = existingItem.qty + qty;
+      if (totalQty > sizeQuantity) {
+        toast.error(`Only ${sizeQuantity} item(s) left in stock for size ${selectedSize}`);
+        return;
+      }
+    } else if (qty > sizeQuantity) {
+      toast.error(`Only ${sizeQuantity} item(s) left in stock for size ${selectedSize}`);
       return;
     }
 
@@ -98,18 +112,20 @@ const ProductDetails = () => {
 
           {/* Stock info */}
           {product.quantity > 0 ? (
-            <p className="mt-2 text-green-600">In stock: {product.quantity}</p>
+            <p className="mt-2 text-green-600">
+              In stock: {selectedSize ? product.sizeQuantities?.[selectedSize] || 0 : product.quantity}
+            </p>
           ) : (
             <p className="mt-2 text-red-500 font-semibold">Out of stock</p>
           )}
 
-          <p className="mt-5 text-gray-500 md:w-4/5 space-y-2">
+          <div className="mt-5 text-gray-500 md:w-4/5 space-y-2">
             {product.description?.split('\n').map((line, index) =>
               line.trim() ? (
                 <p key={index} className="leading-relaxed">{line.trim()}</p>
               ) : null
             )}
-          </p>
+          </div>
 
           <div className="flex flex-col gap-4 my-8">
             <p>Select Size</p>
@@ -130,14 +146,16 @@ const ProductDetails = () => {
 
           <button
             onClick={addToCartHandler}
-            disabled={product.quantity === 0}
+            disabled={product.quantity === 0 || (selectedSize && product.sizeQuantities?.[selectedSize] === 0)}
             className={`px-8 py-3 text-sm mt-4 ${
-              product.quantity === 0
+              product.quantity === 0 || (selectedSize && product.sizeQuantities?.[selectedSize] === 0)
                 ? "bg-gray-400 text-white cursor-not-allowed"
                 : "bg-black text-white active:bg-gray-700"
             }`}
           >
-            {product.quantity === 0 ? "Out of stock" : "ADD TO CART"}
+            {product.quantity === 0 || (selectedSize && product.sizeQuantities?.[selectedSize] === 0)
+              ? "Out of stock"
+              : "ADD TO CART"}
           </button>
 
           <hr className="mt-8 sm:w-4/5" />
