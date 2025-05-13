@@ -32,8 +32,10 @@ const Login = () => {
         e.preventDefault();
         try {
           const res = await login({ email, password }).unwrap();
-          console.log(res);
-          dispatch(setCredentials({ ...res }));
+          
+          dispatch(setCredentials({ ...res })); // save user info to redux (authSlice)
+          localStorage.setItem("token", res.token);
+          toast.success("Login successful. Welcome back!"); 
           navigate(redirect);
         } catch (err) {
           toast.error(err?.data?.message || err.error);
@@ -49,25 +51,22 @@ const Login = () => {
             },
             body: JSON.stringify({ token: credentialResponse.credential }),
           });
-      
+
+          // Lấy dữ liệu từ response
           const data = await res.json();
-      
           if (!res.ok) {
             throw new Error(data.message || "Google login failed");
           }
-      
+
+          // Lưu user và token vào localStorage
           const user = data.user;
-      
-          if (user.isAdmin) {
-            toast.error("You are not authorized to access this application");
-            return;
-          }
-      
-          dispatch(setCredentials(user)); // ✅ set vào Redux
-          localStorage.setItem("token", data.token); // ✅ lưu token (nếu bạn return token từ backend)
+          
+          // Lưu user vào Redux
+          dispatch(setCredentials(user)); 
+          localStorage.setItem("token", data.token); 
       
           navigate("/");
-          toast.success("Login successful");
+          toast.success("Login with Google successful. Welcome back!");
         } catch (err) {
           toast.error(err.message || "Google login failed");
         }

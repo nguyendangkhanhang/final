@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import {OAuth2Client} from "google-auth-library";
-import axios from "axios";
 import User from "../models/userModel.js";
 import createToken from "../utils/createToken.js";
 
@@ -25,9 +24,13 @@ const googleAuth = async (req, res) => {
   const { token } = req.body;
   const payload = await verifyGoogleToken(token);
 
+  // Lấy email, tên và id từ payload
   const { email, name, sub } = payload;
+
+  // Kiểm tra xem user đã tồn tại trong database chưa
   let user = await User.findOne({ email });
 
+  // Nếu user chưa tồn tại, tạo user mới
   if (!user) {
     user = await User.create({
       username: email,
@@ -37,7 +40,7 @@ const googleAuth = async (req, res) => {
     });
   }
 
-  const tokenString = createToken(res, user._id); // ✅ lưu token trả về
+  const tokenString = createToken(res, user._id);
 
   res.status(200).json({
     user: {
@@ -45,7 +48,7 @@ const googleAuth = async (req, res) => {
       username: user.username,
       email: user.email,
     },
-    token: tokenString, // ✅ trả về token để frontend set vào localStorage
+    token: tokenString,
   });
 };
 

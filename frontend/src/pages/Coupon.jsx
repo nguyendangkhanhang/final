@@ -6,8 +6,8 @@ import Loader from '../components/Loader';
 import CouponCard from '../components/CouponCard';
 import Title from '../components/Title'
 import ScrollAnimator from '../components/ScrollAnimator';
+import { useGetUserCouponsQuery } from '../redux/api/userCouponApiSlice';
 
-// Define background patterns/textures if needed globally or inline
 const bannerBgStyle = {
   backgroundColor: '#efe9e0',
   backgroundImage: 'radial-gradient(#dcd6cf 1px, transparent 1px)',
@@ -15,15 +15,35 @@ const bannerBgStyle = {
 };
 
 const gridBgStyle = {
-  backgroundColor: '#f9fafb', // bg-gray-50
-  // Example noise texture (adjust as needed)
-  // backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23cccccc' fill-opacity='0.1' d='M1 3h1v1H1V3zm2-2h1v1H3V1z'%3E%3C/path%3E%3C/svg%3E")',
+  backgroundColor: '#f9fafb', 
 };
 
 const Coupon = () => {
   const { data: discountData, isLoading: discountLoading } = useGetDiscountCodesQuery();
   const [saveUserCoupon] = useSaveUserCouponMutation();
   const { userInfo } = useSelector((state) => state.auth);
+  const { data: userCouponsData } = useGetUserCouponsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
+
+  // Kiểm tra coupon có hợp lệ không (chưa hết hạn và chưa hết lượt sử dụng)
+  const isCouponValid = (coupon) => {
+    const now = new Date();
+    const endDate = new Date(coupon.endDate);
+    return endDate > now && (
+      coupon.usageLimit === 0 || 
+      (coupon.usageLimit > 0 && coupon.usedCount < coupon.usageLimit)
+    );
+  };
+
+  // Lấy danh sách coupon đã lưu, còn hiệu lực và chưa sử dụng
+  const savedCouponIds = userCouponsData?.data
+    ?.filter(coupon => 
+      coupon.discountCode && 
+      isCouponValid(coupon.discountCode) && 
+      !coupon.isUsed
+    )
+    ?.map(c => c.discountCode?._id) || [];
 
   const handleSaveCoupon = async (discountCodeId) => {
     if (!userInfo) {
@@ -31,6 +51,29 @@ const Coupon = () => {
       return;
     }
 
+    // Tìm coupon cần lưu
+    const couponToSave = discountData?.data?.find(discount => discount._id === discountCodeId);
+    
+    if (!couponToSave) {
+      toast.error('Coupon not found');
+      return;
+    }
+
+    // Kiểm tra coupon có hết hạn hoặc hết lượt sử dụng không
+    if (!isCouponValid(couponToSave)) {
+      toast.error('This coupon has expired or reached its usage limit');
+      return;
+    }
+
+    // Kiểm tra coupon đã được sử dụng chưa
+    const existingCoupon = userCouponsData?.data?.find(
+      c => c.discountCode?._id === discountCodeId
+    );
+    if (existingCoupon?.isUsed) {
+      toast.error('This coupon has already been used');
+      return;
+    }
+  
     try {
       await saveUserCoupon(discountCodeId).unwrap();
       toast.success('Save discount code successfully');
@@ -73,13 +116,25 @@ const Coupon = () => {
               No coupons available at the moment.
             </div>
           ) : (
-            discountData?.data?.map((discount) => (
-              <CouponCard 
-                key={discount._id} 
-                discount={discount} 
-                onSave={handleSaveCoupon}
-              />
-            ))
+            discountData?.data?.map((discount) => {
+              const isExpired = !isCouponValid(discount);
+              const existingCoupon = userCouponsData?.data?.find(
+                c => c.discountCode?._id === discount._id
+              );
+              const isUsed = existingCoupon?.isUsed;
+              const isSaved = savedCouponIds.includes(discount._id);
+
+              return (
+                <CouponCard
+                  key={discount._id}
+                  discount={discount}
+                  onSave={handleSaveCoupon}
+                  isSaved={isSaved}
+                  isExpired={isExpired}
+                  isUsed={isUsed}
+                />
+              );
+            })
           )}
         </div>
       </ScrollAnimator>

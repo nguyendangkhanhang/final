@@ -24,10 +24,10 @@ const OrderList = () => {
       if (response.success) {
         refetch();
       } else {
-        alert("❌ Không thể cập nhật trạng thái đơn hàng: " + response.message);
+        alert("❌ Cannot update order status: " + response.message);
       }
     } catch (error) {
-      alert("⚠️ Lỗi: Không thể cập nhật trạng thái đơn hàng!");
+      alert("⚠️ Error: Cannot update order status!");
     } finally {
       setSelectedOrder(null);
     }

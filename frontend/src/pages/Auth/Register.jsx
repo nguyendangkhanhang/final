@@ -31,21 +31,39 @@ const Register = () => {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-
+  
     if (password !== confirmPassword) {
       toast.error("Passwords do not match");
-    } else {
-      try {
-        const res = await register({ username, email, password }).unwrap();
-        dispatch(setCredentials({ ...res }));
-        navigate(redirect);
-        toast.success("User successfully registered");
-      } catch (err) {
-        console.log(err);
-        toast.error(err.data.message);
+      return;
+    }
+  
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+  
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+  
+    try {
+      const res = await register({ username, email, password }).unwrap();
+      dispatch(setCredentials({ ...res }));
+      navigate(redirect);
+      toast.success("User successfully registered");
+    } catch (err) {
+      console.log(err);
+  
+      if (err?.data?.message === "User already exists") {
+        toast.error("Email already exists. Please use a different email.");
+      } else {
+        toast.error(err?.data?.message || "An error occurred during registration");
       }
     }
   };
+  
 
   return (
     <form onSubmit={submitHandler} className='flex flex-col items-center w-[90%] sm:max-w-96 m-auto mt-14 gap-4 text-gray-800'>

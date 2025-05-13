@@ -55,6 +55,15 @@ export const discountApiSlice = apiSlice.injectEndpoints({
         };
       },
     }),
+
+    validateDiscountCode: builder.mutation({
+      query: ({ code, orderAmount }) => ({
+        url: `${DISCOUNT_URL}/validate`,
+        method: 'POST',
+        body: { code, orderAmount },
+        credentials: 'include',
+      }),
+    }),    
   }),
 });
 
@@ -64,4 +73,5 @@ export const {
   useUpdateDiscountCodeMutation,
   useDeleteDiscountCodeMutation,
   useApplyDiscountCodeMutation,
+  useValidateDiscountCodeMutation,
 } = discountApiSlice; 

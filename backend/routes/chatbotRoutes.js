@@ -1,14 +1,16 @@
 import express from "express";
 import {
-  getProductRecommendations,
   getOrderStatus,
-  getCategoryInfo
+  getCategoryInfo,
+  getNewProducts,
+  getTopRatedProducts,
 } from "../controllers/chatbotController.js";
 
 const router = express.Router();
 
-router.post("/recommend-products", getProductRecommendations);
 router.post("/order-status", getOrderStatus);
 router.get("/categories", getCategoryInfo);
+router.get("/new-products", getNewProducts);
+router.get("/top-products", getTopRatedProducts);
 
-export default router; 
+export default router;

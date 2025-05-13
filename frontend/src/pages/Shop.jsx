@@ -24,6 +24,8 @@ const Shop = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 20;
 
+    const [sortPrice, setSortPrice] = useState("");
+
     const categoriesQuery = useFetchCategoriesQuery();
     const [priceFilter, setPriceFilter] = useState("");
 
@@ -32,34 +34,66 @@ const Shop = () => {
         radio,
     });
 
+    const [selectedBrands, setSelectedBrands] = useState([]);
+
     useEffect(() => {
         if (!categoriesQuery.isLoading) {
             dispatch(setCategories(categoriesQuery.data));
         }
     }, [categoriesQuery.data, dispatch]);
 
+    const handlePriceChange = (e) => {
+        const value = e.target.value.replace(/[^0-9]/g, '');
+        setPriceFilter(value);
+    };
+
+    const handleSortPrice = (e) => {
+        setSortPrice(e.target.value);
+    };
+
     useEffect(() => {
-        if (!checked.length || !radio.length) {
-            if (!filteredProductsQuery.isLoading) {
-                const filteredProducts = filteredProductsQuery.data.filter(
-                    (product) => {
-                        return (
-                            product.price.toString().includes(priceFilter) ||
-                            product.price === parseInt(priceFilter, 10)
-                        );
-                    }
+        if (!filteredProductsQuery.isLoading) {
+            let filteredProducts = filteredProductsQuery.data;
+
+            // Lọc theo categories nếu có
+            if (checked.length > 0) {
+                filteredProducts = filteredProducts.filter(product => 
+                    checked.includes(product.category)
                 );
-
-                dispatch(setProducts(filteredProducts));
             }
-        }
-    }, [checked, radio, filteredProductsQuery.data, dispatch, priceFilter]);
 
-    const handleBrandClick = (brand) => {
-        const productsByBrand = filteredProductsQuery.data?.filter(
-            (product) => product.brand === brand
-        );
-        dispatch(setProducts(productsByBrand));
+            // Lọc theo brands nếu có
+            if (selectedBrands.length > 0) {
+                filteredProducts = filteredProducts.filter(product =>
+                    selectedBrands.includes(product.brand)
+                );
+            }
+
+            // Lọc theo price filter
+            if (priceFilter) {
+                filteredProducts = filteredProducts.filter(product => {
+                    const productPrice = product.price.toString();
+                    return productPrice.startsWith(priceFilter);
+                });
+            }
+
+            // Sắp xếp theo giá
+            if (sortPrice === "high-to-low") {
+                filteredProducts.sort((a, b) => b.price - a.price);
+            } else if (sortPrice === "low-to-high") {
+                filteredProducts.sort((a, b) => a.price - b.price);
+            }
+
+            dispatch(setProducts(filteredProducts));
+        }
+    }, [checked, selectedBrands, filteredProductsQuery.data, dispatch, priceFilter, sortPrice]);
+
+    const handleBrandClick = (brand, isChecked) => {
+        if (isChecked) {
+            setSelectedBrands([...selectedBrands, brand]);
+        } else {
+            setSelectedBrands(selectedBrands.filter(b => b !== brand));
+        }
     };
 
     const handleCheck = (value, id) => {
@@ -69,7 +103,7 @@ const Shop = () => {
         dispatch(setChecked(updatedChecked));
     };
 
-    // Thêm key duy nhất cho danh sách Brands
+
     const uniqueBrands = [
         ...Array.from(
             new Set(
@@ -79,10 +113,6 @@ const Shop = () => {
             )
         ),
     ];
-
-    const handlePriceChange = (e) => {
-        setPriceFilter(e.target.value);
-    };
 
     // Tính toán số trang
     const totalPages = products ? Math.ceil(products.length / itemsPerPage) : 1;
@@ -132,7 +162,7 @@ const Shop = () => {
                                         type="checkbox"
                                         id={`brand-${index}`}
                                         name="brand"
-                                        onChange={() => handleBrandClick(brand)}
+                                        onChange={(e) => handleBrandClick(brand, e.target.checked)}
                                         className="w-3 h-3 text-gray-900 border-gray-300 focus:ring-gray-500"
                                     />
                                     <label htmlFor={`brand-${index}`} className="ml-2 text-sm text-gray-700">
@@ -145,13 +175,26 @@ const Shop = () => {
                         {/* Filter theo Price */}
                         <div className="border border-gray-300 p-4 w-full">
                             <h3 className="text-md font-medium mb-2">PRICE</h3>
-                            <input
-                                type="text"
-                                placeholder="Enter Price"
-                                value={priceFilter}
-                                onChange={handlePriceChange}
-                                className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-gray-300"
-                            />
+                            <div className="relative mb-4">
+                                <input
+                                    type="text"
+                                    placeholder="Enter Price"
+                                    value={priceFilter}
+                                    onChange={handlePriceChange}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-gray-300"
+                                />
+                            </div>
+                            <div className="relative">
+                                <select
+                                    value={sortPrice}
+                                    onChange={handleSortPrice}
+                                    className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring focus:border-gray-300"
+                                >
+                                    <option value="">Sort by Price</option>
+                                    <option value="high-to-low">Price: High to Low</option>
+                                    <option value="low-to-high">Price: Low to High</option>
+                                </select>
+                            </div>
                         </div>
 
                         <div className="p-4">

@@ -89,6 +89,7 @@ const ProductDetails = () => {
 
     // Only add to cart, don't update product quantity
     dispatch(addToCart({ ...product, qty, selectedSize }));
+    toast.success("Product added to cart successfully");
     navigate("/cart");
   };
 

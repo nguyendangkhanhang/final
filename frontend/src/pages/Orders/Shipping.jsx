@@ -7,6 +7,7 @@ import {
 } from "../../redux/features/cart/cartSlice";
 import ProgressSteps from "../../components/ProgressSteps";
 import { FaMapMarkerAlt, FaCreditCard } from "react-icons/fa";
+import { toast } from "react-toastify";
 
 const Shipping = () => {
   const cart = useSelector((state) => state.cart);
@@ -28,6 +29,10 @@ const Shipping = () => {
 
   const submitHandler = (e) => {
     e.preventDefault();
+    if (!firstName || !email || !phone || !address || !city || !postalCode || !country) {
+      toast.error("Please fill in all required shipping information!");
+      return; 
+    }
     dispatch(saveShippingAddress({ 
       address, 
       city, 

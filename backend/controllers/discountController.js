@@ -1,5 +1,4 @@
 import DiscountCode from '../models/discountModel.js';
-import * as expressValidator from 'express-validator';
 
 // Validation function
 const validateDiscountCodeData = (req) => {
@@ -8,22 +7,40 @@ const validateDiscountCodeData = (req) => {
     // Validate code
     if (!req.body.code || req.body.code.trim().length < 3 || req.body.code.trim().length > 20) {
         errors.push({ field: 'code', message: 'Discount code must be between 3 and 20 characters' });
+    } else {
+        const codeRegex = /^[A-Z0-9_]+$/i;
+        if (!codeRegex.test(req.body.code.trim())) {
+            errors.push({ field: 'code', message: 'Discount code must only contain letters, numbers, or underscores' });
+        }
     }
 
+
     // Validate discountPercentage
-    if (!req.body.discountPercentage || req.body.discountPercentage < 0 || req.body.discountPercentage > 100) {
-        errors.push({ field: 'discountPercentage', message: 'Discount percentage must be between 0 and 100' });
+    if (
+        req.body.discountPercentage === undefined ||
+        isNaN(req.body.discountPercentage) ||
+        req.body.discountPercentage < 0 ||
+        req.body.discountPercentage > 100
+    ) {
+        errors.push({ field: 'discountPercentage', message: 'Discount percentage must be a number between 0 and 100' });
     }
+
 
     // Validate startDate
     if (!req.body.startDate || isNaN(new Date(req.body.startDate).getTime())) {
         errors.push({ field: 'startDate', message: 'Invalid start date' });
+    } else {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        if (new Date(req.body.startDate) < today) {
+            errors.push({ field: 'startDate', message: 'Start date cannot be in the past' });
+        }
     }
 
     // Validate endDate
     if (!req.body.endDate || isNaN(new Date(req.body.endDate).getTime())) {
         errors.push({ field: 'endDate', message: 'Invalid end date' });
-    } else if (new Date(req.body.endDate) <= new Date(req.body.startDate)) {
+    } else if (new Date(req.body.endDate) < new Date(req.body.startDate)) {
         errors.push({ field: 'endDate', message: 'End date must be after start date' });
     }
 
@@ -31,6 +48,14 @@ const validateDiscountCodeData = (req) => {
     if (!req.body.usageLimit || !Number.isInteger(req.body.usageLimit) || req.body.usageLimit < 1) {
         errors.push({ field: 'usageLimit', message: 'Usage limit must be an integer greater than 0' });
     }
+
+    // Validate minimumOrderAmount
+    if (req.body.minimumOrderAmount !== undefined) {
+        const value = Number(req.body.minimumOrderAmount);
+        if (isNaN(value) || value < 0) {
+            errors.push({ field: 'minimumOrderAmount', message: 'Minimum order amount must be a non-negative number' });
+        }
+    }    
 
     return errors;
 };
@@ -110,9 +135,13 @@ const createDiscountCode = async (req, res) => {
             });
         }
 
+        const endDate = new Date(req.body.endDate);
+        endDate.setHours(23, 59, 59, 999);
+
         const discountCode = await DiscountCode.create({
-            ...req.body,
-            code: req.body.code.toUpperCase()
+        ...req.body,
+        code: req.body.code.toUpperCase(),
+        endDate // ghi đè lại endDate
         });
         
         res.status(201).json({
@@ -250,7 +279,7 @@ const applyDiscountCode = async (req, res) => {
         }
 
         // Kiểm tra số lần sử dụng
-        if (discountCode.usageCount >= discountCode.usageLimit) {
+        if (discountCode.usedCount >= discountCode.usageLimit) {
             return res.status(400).json({
                 success: false,
                 message: 'Discount code has reached its usage limit'
@@ -262,6 +291,9 @@ const applyDiscountCode = async (req, res) => {
 
         // Tính số tiền được giảm
         const discountAmount = (subtotal * discountCode.discountPercentage) / 100;
+
+        discountCode.usedCount += 1;
+        await discountCode.save();
 
         // Trả về thông tin giảm giá
         res.status(200).json({

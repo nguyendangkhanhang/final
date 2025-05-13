@@ -11,59 +11,65 @@ dotenv.config();
 
 // Đăng ký tài khoản user
 const createUser = asyncHandler(async (req, res) => {
-    const { username, email, password } = req.body;
-    
-    if (!username || !email || !password) {
-        throw new Error("Please fill all the inputs.");
-    }
-    
-    const userExists = await User.findOne({ email });
-    if (userExists) res.status(400).send("User already exists");
-      
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
+  const { username, email, password } = req.body;
 
-    const newUser = new User({ username, email, password: hashedPassword });
-    try {
-        await newUser.save();
-        createToken(res, newUser._id);
-    
-        res.status(201).json({
-          _id: newUser._id,
-          username: newUser.username,
-          email: newUser.email,
-        });
-      } catch (error) {
-        res.status(400);
-        throw new Error("Invalid user data");
-      }
+  if (!username || !email || !password) {
+    res.status(400);
+    throw new Error("Please fill all the inputs.");
+  }
+
+  const userExists = await User.findOne({ email });
+  if (userExists) {
+    res.status(400);
+    throw new Error("User already exists");
+  }
+  // Mã hóa password bằng bcrypt
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  // Tạo user mới và lưu vào database
+  const newUser = new User({ username, email, password: hashedPassword });
+  await newUser.save();
+
+  // Tạo token cho user mới
+  createToken(res, newUser._id);
+
+  res.status(201).json({
+    _id: newUser._id,
+    username: newUser.username,
+    email: newUser.email,
+  });
 });
 
-// Đăng nhập user (Chặn admin đăng nhập ở đây)
+// Đăng nhập user 
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
 
   const existingUser = await User.findOne({ email });
 
   if (existingUser) {
-    if (existingUser.isAdmin) {
-      res.status(403).json({ message: "Admins cannot log in here." });
-      return;
-    }
-
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-    if (isPasswordValid) {
-      createToken(res, existingUser._id);
-      res.status(201).json({
-        _id: existingUser._id,
-        username: existingUser.username,
-        email: existingUser.email,
-      });
+    
+    if (!isPasswordValid) {
+      res.status(401).json({ message: "Invalid email or password" });
       return;
     }
-  }
 
-  res.status(401).json({ message: "Invalid email or password" });
+    if (existingUser.isAdmin) {
+      res.status(401).json({ message: "Invalid email or password" });
+      return;
+    }
+
+    const token = createToken(res, existingUser._id);
+    res.status(201).json({
+      _id: existingUser._id,
+      username: existingUser.username,
+      email: existingUser.email,
+      token,
+    });
+  } else {
+    res.status(401).json({ message: "Invalid email or password" });
+  }
 });
 
 // Đăng xuất user
@@ -129,23 +135,35 @@ const loginAdmin = asyncHandler(async (req, res) => {
 
   const existingUser = await User.findOne({ email });
 
-  if (existingUser && existingUser.isAdmin) {
-    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
-
-    if (isPasswordValid) {
-      const token = createToken(res, existingUser._id, true);
-      res.status(200).json({
-        _id: existingUser._id,
-        username: existingUser.username,
-        email: existingUser.email,
-        isAdmin: true,
-        token,
-      });
-      return;
-    }
+  if (!existingUser || !existingUser.isAdmin) {
+    res.status(401).json({ message: "Access Denied. Admins only." });
+    return;
   }
 
-  res.status(403).json({ message: "Access Denied. Admins only." });
+  const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+  if (!isPasswordValid) {
+    res.status(401).json({ message: "Invalid email or password" });
+    return;
+  }
+
+  const token = createToken(res, existingUser._id, true); 
+  res.status(200).json({
+    _id: existingUser._id,
+    username: existingUser.username,
+    email: existingUser.email,
+    isAdmin: true,
+    token, // ✅ gửi về client
+  });
+});
+
+// Đăng xuất Admin
+const logoutAdmin = asyncHandler(async (req, res) => {
+  res.cookie("adminToken", "", {
+    httpOnly: true,
+    expires: new Date(0),
+  });
+
+  res.status(200).json({ message: "Admin logged out successfully" });
 });
 
 
@@ -210,5 +228,5 @@ const updateUserById = asyncHandler(async (req, res) => {
 
 export { 
   createUser, loginUser, logoutCurrentUser, getCurrentUserProfile, updateCurrentUserProfile,
-  loginAdmin, getAllUsers, deleteUserById, getUserById, updateUserById
+  loginAdmin, logoutAdmin, getAllUsers, deleteUserById, getUserById, updateUserById
 };

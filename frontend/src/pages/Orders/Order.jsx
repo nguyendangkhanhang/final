@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useLocation } from "react-router-dom";
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -17,6 +17,8 @@ import { formatPrice } from "../../Utils/cartUtils";
 
 const Order = () => {
   const { id: orderId } = useParams();
+  const { state } = useLocation(); // ✅ Nhận state để kiểm tra fromCOD
+
   const { data: order, refetch, isLoading, error } = useGetOrderDetailsQuery(orderId);
   const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
   const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
@@ -27,7 +29,7 @@ const Order = () => {
 
   useEffect(() => {
     if (!errorPayPal && !loadingPayPal && paypal?.clientId) {
-      const loadingPayPalScript = async () => {
+      const loadPaypalScript = async () => {
         paypalDispatch({
           type: "resetOptions",
           value: {
@@ -39,7 +41,7 @@ const Order = () => {
       };
 
       if (order && !order.isPaid && !window.paypal) {
-        loadingPayPalScript();
+        loadPaypalScript();
       }
     }
   }, [errorPayPal, loadingPayPal, order, paypal, paypalDispatch]);
@@ -73,21 +75,11 @@ const Order = () => {
     refetch();
   };
 
-  // Tính toán giá trị
   const subtotal = order?.itemsPrice || 0;
   const shipping = order?.shippingPrice || 0;
   const discountAmount = order?.discountAmount || 0;
   const discountPercentage = order?.discountPercentage || 0;
   const finalTotal = order?.totalPrice || 0;
-
-  console.log('Order data:', {
-    subtotal,
-    shipping,
-    discountAmount,
-    discountPercentage,
-    finalTotal,
-    order
-  });
 
   return isLoading ? (
     <Loader />
@@ -95,12 +87,18 @@ const Order = () => {
     <Message variant="danger">{error.data?.message || error.message}</Message>
   ) : (
     <div className="bg-gray-50 min-h-screen">
+      {/* ✅ Banner Success nếu từ COD */}
+      {state?.fromCOD && (
+        <div className="bg-green-100 border border-green-400 text-green-700 px-6 py-4 rounded relative text-center">
+          <strong className="font-bold text-xl block">Order placed successfully!</strong>
+          <span className="block">Please prepare payment upon delivery. Thank you for shopping with us!</span>
+        </div>
+      )}
+
       <ScrollAnimator>
-        <div 
-          className="relative h-64 md:h-80 flex items-center justify-center text-black bg-[#efe9e0] overflow-hidden"
-        >
-          <div className='relative z-10 text-center px-4'>
-            <div className='text-7xl text-center'>
+        <div className="relative h-64 md:h-80 flex items-center justify-center text-black bg-[#efe9e0] overflow-hidden">
+          <div className="relative z-10 text-center px-4">
+            <div className="text-7xl text-center">
               <Title text1={'ORDER'} text2={'DETAILS'} />
             </div>
             <p className="mt-2 text-lg md:text-xl text-gray-700">Review your order information</p>
@@ -122,7 +120,6 @@ const Order = () => {
                 <h2 className="text-2xl font-semibold text-gray-900">Order Items</h2>
                 <p className="mt-2 text-sm text-gray-600">Order ID: {order?._id}</p>
               </div>
-              
               {order?.orderItems?.length === 0 ? (
                 <div className="p-6">
                   <Message>Order is empty</Message>
@@ -145,9 +142,7 @@ const Order = () => {
                           <td className="px-6 py-4">
                             <div className="flex items-center">
                               <img
-                                src={item.image?.startsWith("/uploads")
-                                  ? `http://localhost:5000${item.image}`
-                                  : item.image}
+                                src={item.image?.startsWith("/uploads") ? `http://localhost:5000${item.image}` : item.image}
                                 alt={item.name}
                                 className="h-16 w-16 object-cover rounded"
                               />
@@ -162,7 +157,9 @@ const Order = () => {
                             {item.selectedSize}
                           </td>
                           <td className="px-6 py-4 text-center text-base text-gray-500">{item.qty}</td>
-                          <td className="px-6 py-4 text-center text-base text-gray-500">{formatPrice(item.qty * item.price)}</td>
+                          <td className="px-6 py-4 text-center text-base text-gray-500">
+                            {formatPrice(item.price)}
+                          </td>
                           <td className="px-6 py-4 text-center text-base font-medium text-gray-900">
                             {formatPrice(item.qty * item.price)}
                           </td>
@@ -247,7 +244,7 @@ const Order = () => {
                     </div>
                   </div>
 
-                  {/* PayPal + Admin Deliver */}
+                  {/* PayPal Payment */}
                   {!order?.isPaid && order?.paymentMethod !== "Cash on Delivery" && (
                     <div className="space-y-4">
                       {loadingPay && <Loader />}
@@ -263,6 +260,7 @@ const Order = () => {
                     </div>
                   )}
 
+                  {/* Admin Deliver button */}
                   {loadingDeliver && <Loader />}
                   {userInfo?.isAdmin && order?.isPaid && !order?.isDelivered && (
                     <button

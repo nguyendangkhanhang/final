@@ -247,25 +247,6 @@ const updateStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
-    // Nếu đơn hàng bị hủy, hoàn trả số lượng sản phẩm
-    if (status === "Cancelled") {
-      for (const item of order.orderItems) {
-        const product = await Product.findById(item.product);
-        if (product) {
-          // Hoàn trả tổng số lượng
-          product.quantity += item.qty;
-          
-          // Hoàn trả số lượng theo size
-          if (product.sizeQuantities && product.sizeQuantities.has(item.selectedSize)) {
-            const currentSizeQty = product.sizeQuantities.get(item.selectedSize);
-            product.sizeQuantities.set(item.selectedSize, currentSizeQty + item.qty);
-          }
-          
-          await product.save();
-        }
-      }
-    }
-
     // Nếu trạng thái mới là "Delivered" và phương thức thanh toán là "Cash on Delivery"
     if (status === "Delivered" && order.paymentMethod === "Cash on Delivery" && !order.isPaid) {
       order.isPaid = true;

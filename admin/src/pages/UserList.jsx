@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { FaTrash, FaEdit, FaCheck, FaTimes } from "react-icons/fa";
 import Message from "@frontend/components/Message";
-import Loader from "@frontend/components/Loader";
 import {
   useDeleteUserMutation,
   useGetUsersQuery,

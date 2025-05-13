@@ -5,14 +5,7 @@ const createToken = (res, userId, isAdmin = false) => {
     expiresIn: "30d",
   });
 
-  res.cookie(isAdmin ? "adminToken" : "jwt", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV !== "development",
-    sameSite: "strict",
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 ngày
-  });
-
-  return token; // Trả về token để gửi cho frontend
+  return token; 
 };
 
 export default createToken;

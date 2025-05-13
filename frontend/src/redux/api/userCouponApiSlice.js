@@ -5,7 +5,7 @@ export const userCouponApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     saveUserCoupon: builder.mutation({
       query: (discountCodeId) => ({
-        url: USER_COUPON_URL,
+        url: `${USER_COUPON_URL}`,
         method: "POST",
         body: { discountCodeId },
         credentials: "include",
@@ -18,7 +18,7 @@ export const userCouponApiSlice = apiSlice.injectEndpoints({
 
     getUserCoupons: builder.query({
       query: () => ({
-        url: USER_COUPON_URL,
+        url: `${USER_COUPON_URL}`,
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
@@ -36,8 +36,8 @@ export const userCouponApiSlice = apiSlice.injectEndpoints({
           "Content-Type": "application/json",
         },
       }),
-      invalidatesTags: ["UserCoupon"],
-    }),
+      invalidatesTags: ["UserCoupon", "Discount"],
+    }),    
   }),
 });
 

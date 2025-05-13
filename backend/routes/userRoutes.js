@@ -1,30 +1,68 @@
 import express from "express";
 import {  
-    createUser,
-    loginUser,
-    logoutCurrentUser,
-    getAllUsers,
-    getCurrentUserProfile,
-    updateCurrentUserProfile,
-    deleteUserById,
-    getUserById,
-    updateUserById,
-    loginAdmin
+  createUser,
+  loginUser,
+  logoutCurrentUser,
+  getCurrentUserProfile,
+  updateCurrentUserProfile,
+  loginAdmin,
+  logoutAdmin,
+  getAllUsers,
+  deleteUserById,
+  getUserById,
+  updateUserById,
 } from "../controllers/userController.js";
 import { authenticate, authenticateAdmin } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
-router.post("/register", createUser); // Đăng ký user
-router.post("/auth", loginUser); // Đăng nhập user
-router.post("/logout", logoutCurrentUser); // Đăng xuất
-router.route("/profile").get(authenticate, getCurrentUserProfile).put(authenticate, updateCurrentUserProfile);
+/* 
+  ======================
+  User Authentication Routes
+  ======================
+*/
 
-router.post("/admin/login", loginAdmin); // Đăng nhập admin
+// Register a new user
+router.post("/", createUser);
+
+// Login user
+router.post("/auth", loginUser);
+
+// Logout user
+router.post("/logout", logoutCurrentUser);
+
+// Get and update user profile (protected)
+router
+  .route("/profile")
+  .get(authenticate, getCurrentUserProfile)
+  .put(authenticate, updateCurrentUserProfile);
+
+/* 
+  ======================
+  Admin Authentication Routes
+  ======================
+*/
+
+// Admin login
+router.post("/admin/login", loginAdmin);
+
+// Admin logout
+router.post("/admin/logout", logoutAdmin);
+
+/* 
+  ======================
+  Admin User Management Routes (protected by admin authentication)
+  ======================
+*/
+
+// Get all users
 router.get("/", authenticateAdmin, getAllUsers);
-router.route("/admin/users/:id")
-  .delete(authenticateAdmin, deleteUserById)
+
+// Get, update, delete a user by ID
+router
+  .route("/admin/users/:id")
   .get(authenticateAdmin, getUserById)
-  .put(authenticateAdmin, updateUserById);
+  .put(authenticateAdmin, updateUserById)
+  .delete(authenticateAdmin, deleteUserById);
 
 export default router;

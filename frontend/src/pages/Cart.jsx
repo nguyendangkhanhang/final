@@ -9,21 +9,41 @@ import { toast } from "react-toastify";
 import Title from '../components/Title';
 import ScrollAnimator from '../components/ScrollAnimator';
 import { useUpdateProductQuantityMutation } from "../redux/api/productApiSlice";
+import { useValidateDiscountCodeMutation } from '../redux/api/discountApiSlice';
 
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const { userInfo } = useSelector((state) => state.auth);
   const [updateProductQuantity] = useUpdateProductQuantityMutation();
+  const [validateDiscountCode] = useValidateDiscountCodeMutation();
+
+  useEffect(() => {
+    if (!userInfo) {
+      navigate('/login?redirect=/cart');
+    } else {
+      // Lưu token vào localStorage khi có userInfo
+      localStorage.setItem('token', userInfo.token);
+    }
+  }, [userInfo, navigate]);
 
   const cart = useSelector((state) => state.cart);
   const { cartItems, discount } = cart;
 
-  const { data: userCouponsData } = useGetUserCouponsQuery();
+  const { data: userCouponsData, refetch } = useGetUserCouponsQuery();
   const [showCouponModal, setShowCouponModal] = useState(false);
 
   useEffect(() => {
-    dispatch(clearDiscount());
-  }, [dispatch]);
+    if (showCouponModal) {
+      refetch(); 
+    }
+  }, [showCouponModal]);
+
+  useEffect(() => {
+    if (cartItems.length === 0 && discount) {
+      dispatch(clearDiscount());
+    }
+  }, [cartItems, discount, dispatch]);
 
   const addToCartHandler = (item, qty) => {
     // Only update cart, don't update product quantity
@@ -33,25 +53,48 @@ const Cart = () => {
   const removeFromCartHandler = (id, selectedSize) => {
     // Only remove from cart, don't update product quantity
     dispatch(removeFromCart({ id: id, selectedSize }));
+    toast.error("Product removed from cart.");
   };
 
   const checkoutHandler = () => {
     navigate("/login?redirect=/shipping");
   };
 
-  const handleSelectCoupon = (coupon) => {
-    if (coupon.isUsed) {
-      toast.error('Discount code has been used');
+  const handleSelectCoupon = async (coupon) => {
+    const now = new Date();
+    const endDate = new Date(coupon?.discountCode?.endDate);
+  
+    const isExpired = endDate < now || (
+      coupon?.discountCode?.usageLimit > 0 &&
+      coupon?.discountCode?.usedCount >= coupon?.discountCode?.usageLimit
+    );
+  
+    const isUsed = coupon.isUsed;
+  
+    if (isUsed || isExpired || !coupon.discountCode?.isActive) {
+      toast.error('Discount code is no longer valid');
       return;
     }
-    
-    dispatch(setDiscount({
-      code: coupon.discountCode.code,
-      discountPercentage: coupon.discountCode.discountPercentage,
-      couponId: coupon._id
-    }));
-    setShowCouponModal(false);
-    toast.success('Discount code applied successfully');
+  
+    const subtotal = calculateSubtotal(cartItems);
+  
+    try {
+      const res = await validateDiscountCode({
+        code: coupon.discountCode.code,
+        orderAmount: subtotal
+      }).unwrap();
+  
+      dispatch(setDiscount({
+        code: res.data.discountCode,
+        discountPercentage: res.data.discountPercentage,
+        couponId: coupon._id
+      }));
+  
+      setShowCouponModal(false);
+      toast.success('Discount code applied successfully');
+    } catch (err) {
+      toast.error(err?.data?.message || 'Discount code is no longer valid');
+    }
   };
 
   const handleRemoveDiscount = () => {
@@ -250,52 +293,80 @@ const Cart = () => {
 
             <div className="p-6 max-h-[90vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {userCouponsData?.data?.filter(c => !c.isUsed && c.discountCode).map((coupon) => (
-                  <div
-                    key={coupon._id}
-                    className="relative bg-white border border-gray-300 rounded-xl w-full mx-auto overflow-hidden shadow-sm"
-                  >
-                    <div className="flex justify-between items-center px-6 py-4">
-                      <div className="text-[#bd8837] font-bold text-[2.5rem] leading-none">
-                        <div>{coupon.discountCode?.discountPercentage || 0}%</div>
-                        <div className="text-[1.5rem]">OFF</div>
-                      </div>
-                      <div className="text-[#bd8837] text-right text-[1.5rem] font-semibold leading-tight tracking-wide">
-                        <div>DISCOUNT</div>
-                        <div>COUPON</div>
-                      </div>
-                    </div>
+                {userCouponsData?.data?.length > 0 &&
+                  userCouponsData?.data?.map((coupon) => {
+                    const now = new Date();
+                    const endDate = new Date(coupon?.discountCode?.endDate);
+                    const isExpiredByDate = endDate < now;
+                    const isExpiredByUsage = coupon?.discountCode?.usageLimit > 0 &&
+                                             coupon?.discountCode?.usedCount >= coupon?.discountCode?.usageLimit;
+                    const isUsed = coupon?.isUsed;
+                  
+                    let buttonLabel = 'APPLY';
+                    if (isUsed) buttonLabel = 'USED';
+                    else if (isExpiredByUsage || isExpiredByDate) buttonLabel = 'EXPIRED';
+                  
+                    return (
+                      <div
+                        key={coupon._id}
+                        className={`relative border rounded-xl w-full mx-auto overflow-hidden shadow-sm ${
+                          isUsed || isExpiredByUsage || isExpiredByDate ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
+                      >
+                        <div className="flex justify-between items-center px-6 py-4">
+                          <div className="text-[#bd8837] font-bold text-[2.5rem] leading-none">
+                            <div>{coupon.discountCode?.discountPercentage || 0}%</div>
+                            <div className="text-[1.5rem]">OFF</div>
+                          </div>
+                          <div className="text-[#bd8837] text-right text-[1.5rem] font-semibold leading-tight tracking-wide">
+                            <div>DISCOUNT</div>
+                            <div>COUPON</div>
+                          </div>
+                        </div>
 
-                    <div className="border-t border-dashed border-gray-400 mx-4" />
+                        <div className="border-t border-dashed border-gray-400 mx-4" />
 
-                    <div className="flex justify-between items-center px-6 py-3 flex-wrap gap-2">
-                      <div className="text-lg font-semibold tracking-wider text-gray-800">
-                        {coupon.discountCode?.code}
-                        <div className="text-xs text-gray-600 font-normal mt-1">
-                          Valid from{" "}
-                          <span className="font-semibold">
-                            {new Date(coupon.discountCode?.startDate).toLocaleDateString("en-US", {
-                              month: "long", day: "numeric",
-                            })}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-semibold">
-                            {new Date(coupon.discountCode?.endDate).toLocaleDateString("en-US", {
-                              month: "long", day: "numeric", year: "numeric",
-                            })}
-                          </span>
+                        <div className="flex justify-between items-center px-6 py-3 flex-wrap gap-2">
+                          <div className="text-lg font-semibold tracking-wider text-gray-800">
+                            {coupon.discountCode?.code}
+                            <div className="text-xs text-gray-600 font-normal mt-1">
+                              Valid from{' '}
+                              <span className="font-semibold">
+                                {new Date(coupon.discountCode?.startDate).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                })}
+                              </span>{' '}
+                              to{' '}
+                              <span className="font-semibold">
+                                {new Date(coupon.discountCode?.endDate).toLocaleDateString("en-US", {
+                                  month: "long",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => handleSelectCoupon(coupon)}
+                            disabled={isUsed || isExpiredByUsage || isExpiredByDate}
+                            className={`px-6 py-2 rounded-sm font-semibold ${
+                              isUsed || isExpiredByUsage || isExpiredByDate
+                                ? 'bg-gray-400 text-white cursor-not-allowed'
+                                : 'bg-[#bd8837] text-white hover:opacity-90'
+                            }`}
+                          >
+                            {buttonLabel}
+                          </button>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleSelectCoupon(coupon)}
-                        className="bg-[#bd8837] text-white px-6 py-2 rounded-sm font-semibold hover:opacity-90"
-                      >
-                        Apply
-                      </button>
-                    </div>
-                  </div>
-                ))}
-                {userCouponsData?.data?.filter(c => !c.isUsed && c.discountCode).length === 0 && (
+                    );
+                  })}
+
+                {userCouponsData?.data?.filter(
+                  (c) => !c.isUsed && c.discountCode
+                ).length === 0 && (
                   <div className="col-span-3 text-center text-gray-500">
                     You don't have any coupon
                   </div>

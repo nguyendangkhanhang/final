@@ -5,6 +5,7 @@ import Loader from "../components/Loader";
 import Pagination from '@frontend/components/Pagination';
 import { useState } from "react";
 import { formatPrice } from "@frontend/Utils/cartUtils";
+
 const AllProducts = () => {
     const { data: products, isLoading, isError } = useAllProductsQuery();
     const [currentPage, setCurrentPage] = useState(1);

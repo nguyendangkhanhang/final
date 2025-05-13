@@ -34,12 +34,13 @@ const DiscountList = () => {
 
     useEffect(() => {
         if (error) {
-            toast.error(error?.data?.message || 'Có lỗi xảy ra');
+            toast.error(error?.data?.message || 'Error');
         }
     }, [error]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
         const discountData = {
             code: formData.code.toUpperCase(),
             discountPercentage: Number(formData.discountPercentage),
@@ -50,15 +51,16 @@ const DiscountList = () => {
             description: formData.description || '',
             isActive: true
         };
-
+    
         try {
             if (editingDiscount) {
                 await updateDiscountCode({ id: editingDiscount._id, discountData }).unwrap();
-                toast.success('Cập nhật thành công');
+                toast.success('Update successfully');
             } else {
                 await createDiscountCode(discountData).unwrap();
-                toast.success('Tạo mã giảm giá thành công');
+                toast.success('Create successfully');
             }
+    
             setShowModal(false);
             setEditingDiscount(null);
             setFormData({
@@ -71,9 +73,15 @@ const DiscountList = () => {
                 description: ''
             });
         } catch (error) {
-            toast.error(error?.data?.message || 'Có lỗi xảy ra');
+            if (error?.data?.errors && Array.isArray(error.data.errors)) {
+                error.data.errors.forEach(err => {
+                    toast.error(`${err.field.toUpperCase()}: ${err.message}`);
+                });
+            } else {
+                toast.error(error?.data?.message || 'Error');
+            }
         }
-    };
+    };    
 
     const handleEdit = (discount) => {
         setEditingDiscount(discount);
@@ -90,12 +98,12 @@ const DiscountList = () => {
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Bạn có chắc chắn muốn xóa mã giảm giá này?')) {
+        if (window.confirm('Are you sure you want to delete this discount code?')) {
             try {
                 await deleteDiscountCode(id).unwrap();
-                toast.success('Xóa thành công');
+                toast.success('Delete successfully');
             } catch (error) {
-                toast.error(error?.data?.message || 'Có lỗi xảy ra');
+                toast.error(error?.data?.message || 'Error');
             }
         }
     };
@@ -190,7 +198,7 @@ const DiscountList = () => {
                                                 {discount.usedCount}/{discount.usageLimit}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-black">
-                                                {discount.minimumOrderAmount.toLocaleString()}đ
+                                                {discount.minimumOrderAmount.toLocaleString()}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">

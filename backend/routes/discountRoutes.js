@@ -15,7 +15,7 @@ const router = express.Router();
 router.post('/validate', validateDiscountCode);
 
 // Protected routes (require authentication)
-router.get('/', authenticate, getDiscountCodes);
+router.get('/', getDiscountCodes);
 
 // Admin routes (require admin privileges)
 router.post('/', authenticateAdmin, createDiscountCode);

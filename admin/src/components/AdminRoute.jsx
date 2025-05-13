@@ -1,14 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { useSelector } from "react-redux";
 
 const AdminRoute = () => {
-    const token = localStorage.getItem("adminToken");
+  const adminInfo = JSON.parse(localStorage.getItem("adminInfo"));
 
-    if (!token) {
-        return <Navigate to="/admin/login" replace />;
-    }
+  if (!adminInfo?.isAdmin) {
+    return <Navigate to="/admin/login" replace />;
+  }
 
-    return <Outlet />;
+  return <Outlet />;
 };
 
 export default AdminRoute;

@@ -18,7 +18,7 @@ const cartSlice = createSlice({
         _id: item._id || item.product,
         product: item._id || item.product,
       };
-    
+
       const existItem = state.cartItems.find(
         (x) => x._id === itemWithProduct._id && x.selectedSize === itemWithProduct.selectedSize
       );

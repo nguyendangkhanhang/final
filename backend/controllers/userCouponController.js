@@ -63,10 +63,13 @@ export const getUserCoupons = async (req, res) => {
       .populate('discountCode')
       .sort({ createdAt: -1 });
 
+    const filteredCoupons = userCoupons.filter(coupon => coupon.discountCode);
+
     res.status(200).json({
       success: true,
-      data: userCoupons
+      data: filteredCoupons
     });
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -95,6 +98,13 @@ export const markCouponAsUsed = async (req, res) => {
       });
     }
 
+    // ✅ Tăng usedCount cho discountCode
+    const discountCode = await DiscountCode.findById(userCoupon.discountCode);
+    if (discountCode.usedCount < discountCode.usageLimit) {
+      discountCode.usedCount += 1;
+      await discountCode.save();
+    }
+
     res.status(200).json({
       success: true,
       data: userCoupon
@@ -106,4 +116,4 @@ export const markCouponAsUsed = async (req, res) => {
       error: error.message
     });
   }
-}; 
+};

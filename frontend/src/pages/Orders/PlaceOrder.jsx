@@ -105,9 +105,16 @@ const PlaceOrder = () => {
       }
   
       dispatch(clearCartItems());
-      navigate(`/order/${res._id}`);
+
+      if (cart.paymentMethod === "Cash on Delivery") {
+        toast.success("Your order has been placed successfully. Please pay upon delivery.", {
+          autoClose: 3000,
+        });
+      }
+
+      navigate(`/order/${res._id}`, { state: { fromCOD: true } });
     } catch (error) {
-      toast.error(error?.data?.message || error.message || "Có lỗi xảy ra khi đặt hàng");
+      toast.error(error?.data?.message || error.message || "Error Place Order");
     }
   };
 

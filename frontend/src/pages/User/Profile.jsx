@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import Title from '../../components/Title';
 import ScrollAnimator from '../../components/ScrollAnimator';
 import { FaUser, FaEnvelope, FaLock, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { apiSlice } from "../../redux/api/apiSlice"; 
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('profile');
@@ -53,6 +54,8 @@ const Profile = () => {
     try {
       await logoutApiCall().unwrap();
       dispatch(logout());
+      dispatch(apiSlice.util.resetApiState());
+      toast.success("Logout successful. See you next time!");
       navigate("/login");
     } catch (error) {
       console.error(error);
