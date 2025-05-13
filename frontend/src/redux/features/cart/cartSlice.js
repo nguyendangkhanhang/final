@@ -10,6 +10,7 @@ const cartSlice = createSlice({
   initialState,
   reducers: {
     addToCart: (state, action) => {
+      // Lấy tất cả thông tin sản phẩm từ action.payload trừ các trường không cần thiết
       const { user, rating, numReviews, reviews, ...item } = action.payload;
     
       // Đảm bảo _id và product đều có
@@ -19,20 +20,24 @@ const cartSlice = createSlice({
         product: item._id || item.product,
       };
 
+      // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
       const existItem = state.cartItems.find(
         (x) => x._id === itemWithProduct._id && x.selectedSize === itemWithProduct.selectedSize
       );
     
       if (existItem) {
+        // Cộng dồn số lượng nếu sản phẩm đã có trong giỏ hàng
         state.cartItems = state.cartItems.map((x) =>
           x._id === existItem._id && x.selectedSize === existItem.selectedSize
             ? { ...itemWithProduct, countInStock: x.countInStock }
             : x
         );
       } else {
+        // Thêm mới vào giỏ hàng nếu sản phẩm chưa có
         state.cartItems = [...state.cartItems, { ...itemWithProduct, countInStock: item.quantity }];
       }
     
+      // Cập nhật lại giỏ hàng
       return updateCart(state, itemWithProduct);
     },
 

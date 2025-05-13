@@ -5,8 +5,10 @@ const ChatForm = ({ chatHistory, setChatHistory, generateBotResponse, isBotProce
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
+    // check chatbot có đang trả lời không -> có thì vô hiệu hóa gửi thêm tin nhắn.
     if (isBotProcessing) return;
 
+    // lấy thông tin từ ô input
     const userMessage = inputRef.current.value.trim();
     if (!userMessage) return;
     inputRef.current.value = "";

@@ -5,8 +5,7 @@ import { toast } from "react-toastify";
 import {
   useGetProductDetailsQuery,
   useGetTopProductsQuery,
-  useCreateReviewMutation,
-  useUpdateProductQuantityMutation,
+  useCreateReviewMutation
 } from "../../redux/api/productApiSlice";
 import Loader from "../../components/Loader";
 import Message from "../../components/Message";
@@ -37,7 +36,6 @@ const ProductDetails = () => {
     pollingInterval: 3000,
   });
 
-  const [updateProductQuantity] = useUpdateProductQuantityMutation();
   const { userInfo } = useSelector((state) => state.auth);
   const [createReview, { isLoading: loadingProductReview }] =
     useCreateReviewMutation();
@@ -90,7 +88,6 @@ const ProductDetails = () => {
     // Only add to cart, don't update product quantity
     dispatch(addToCart({ ...product, qty, selectedSize }));
     toast.success("Product added to cart successfully");
-    navigate("/cart");
   };
 
   return isLoading ? (

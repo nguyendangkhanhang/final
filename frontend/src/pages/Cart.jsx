@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { FaTrash, FaShoppingCart, FaGift } from "react-icons/fa";
 import { addToCart, removeFromCart, setDiscount, clearDiscount } from "../redux/features/cart/cartSlice";
-import { updateCart, formatPrice, calculateSubtotal, calculateDiscount, calculateTotal } from "../Utils/cartUtils";
+import { updateCart, formatPrice, calculateSubtotal, calculateDiscount, calculateTotal } from "../Utils/cartUtils"; 
 import { useGetUserCouponsQuery } from '../redux/api/userCouponApiSlice';
 import { toast } from "react-toastify";
 import Title from '../components/Title';
@@ -89,7 +89,7 @@ const Cart = () => {
         discountPercentage: res.data.discountPercentage,
         couponId: coupon._id
       }));
-  
+      
       setShowCouponModal(false);
       toast.success('Discount code applied successfully');
     } catch (err) {

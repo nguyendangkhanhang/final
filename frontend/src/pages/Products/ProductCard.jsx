@@ -1,12 +1,7 @@
 import { Link } from "react-router-dom";
-import { AiOutlineShoppingCart } from "react-icons/ai";
-import { useDispatch } from "react-redux";
-import { addToCart } from "../../redux/features/cart/cartSlice";
-import { toast } from "react-toastify";
 import { formatPrice } from "../../Utils/cartUtils";
 
 const ProductCard = ({ p }) => {
-  const dispatch = useDispatch();
 
   return (
     <div className="max-w-[280px] bg-white object-cover transition-transform duration-300 hover:scale-105">

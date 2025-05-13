@@ -10,7 +10,7 @@ const client = new OAuth2Client(
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI
 );
-
+ // xác minh token có hợp lệ không.
 async function verifyGoogleToken(token){
     const ticket = await client.verifyIdToken({
         idToken: token,
@@ -24,7 +24,7 @@ const googleAuth = async (req, res) => {
   const { token } = req.body;
   const payload = await verifyGoogleToken(token);
 
-  // Lấy email, tên và id từ payload
+  // Lấy email, tên và ggid từ payload
   const { email, name, sub } = payload;
 
   // Kiểm tra xem user đã tồn tại trong database chưa

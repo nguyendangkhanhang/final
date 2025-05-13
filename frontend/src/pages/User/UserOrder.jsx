@@ -4,7 +4,6 @@ import Message from "../../components/Message";
 import Loader from "../../components/Loader";
 import { Link } from "react-router-dom";
 import { useGetMyOrdersQuery } from "../../redux/api/orderApiSlice";
-import { apiSlice } from "../../redux/api/apiSlice";
 import Title from '../../components/Title';
 import ScrollAnimator from '../../components/ScrollAnimator';
 import { FaShoppingBag, FaCheckCircle, FaClock, FaTruck, FaEye } from 'react-icons/fa';

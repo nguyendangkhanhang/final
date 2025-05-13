@@ -3,11 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useGetFilteredProductsQuery } from "../redux/api/productApiSlice";
 import { useFetchCategoriesQuery } from "../redux/api/categoryApiSlice";
 
-import {
-    setCategories,
-    setProducts,
-    setChecked,
-} from "../redux/features/shop/shopSlice";
+import { setCategories, setProducts, setChecked } from "../redux/features/shop/shopSlice";
 
 import Loader from "../components/Loader";
 import ProductCard from "./Products/ProductCard";
@@ -15,117 +11,103 @@ import Title from '../components/Title';
 import ScrollAnimator from '../components/ScrollAnimator';
 import Pagination from '../components/Pagination';
 
-
 const Shop = () => {
     const dispatch = useDispatch();
-    const { categories, products, checked, radio } = useSelector(
-        (state) => state.shop
-    );
+  
+    // Redux state
+    const { categories, products, checked, radio } = useSelector(state => state.shop);
+  
+    // Local state
+    const [selectedBrands, setSelectedBrands] = useState([]);
+    const [priceFilter, setPriceFilter] = useState("");
+    const [sortPrice, setSortPrice] = useState("");
     const [currentPage, setCurrentPage] = useState(1);
+  
     const itemsPerPage = 20;
 
-    const [sortPrice, setSortPrice] = useState("");
-
+    // Fetch categories
     const categoriesQuery = useFetchCategoriesQuery();
-    const [priceFilter, setPriceFilter] = useState("");
 
-    const filteredProductsQuery = useGetFilteredProductsQuery({
-        checked,
-        radio,
-    });
+    // Fetch filtered products (checked categories, price range radio)
+    const filteredProductsQuery = useGetFilteredProductsQuery({ checked, radio });
 
-    const [selectedBrands, setSelectedBrands] = useState([]);
-
+    // Fetch categories
     useEffect(() => {
-        if (!categoriesQuery.isLoading) {
-            dispatch(setCategories(categoriesQuery.data));
+        if (categoriesQuery.data && !categoriesQuery.isLoading) {
+          dispatch(setCategories(categoriesQuery.data));
         }
     }, [categoriesQuery.data, dispatch]);
 
-    const handlePriceChange = (e) => {
-        const value = e.target.value.replace(/[^0-9]/g, '');
-        setPriceFilter(value);
-    };
+    // Fetch filtered products
+    useEffect(() => {
+        if (filteredProductsQuery.data && !filteredProductsQuery.isLoading) {
+          let filtered = filteredProductsQuery.data;
+    
+          // Filter by selected categories
+          if (checked.length > 0) {
+            filtered = filtered.filter(p => checked.includes(p.category));
+          }
+    
+          // Filter by selected brands
+          if (selectedBrands.length > 0) {
+            filtered = filtered.filter(p => selectedBrands.includes(p.brand));
+          }
+    
+          // Filter by price input
+          if (priceFilter) {
+            filtered = filtered.filter(p => p.price.toString().startsWith(priceFilter));
+          }
+    
+          // Sort by price
+          if (sortPrice === "high-to-low") {
+            filtered.sort((a, b) => b.price - a.price);
+          } else if (sortPrice === "low-to-high") {
+            filtered.sort((a, b) => a.price - b.price);
+          }
+    
+          // Update Redux state
+          dispatch(setProducts(filtered));
+        }
+    }, [checked, selectedBrands, priceFilter, sortPrice, filteredProductsQuery.data, dispatch]);
 
+    const handleCheck = (isChecked, id) => {
+        const updatedChecked = isChecked
+          ? [...checked, id]
+          : checked.filter(c => c !== id);
+        dispatch(setChecked(updatedChecked));
+    };
+    
+    const handleBrandClick = (brand, isChecked) => {
+        setSelectedBrands(isChecked
+          ? [...selectedBrands, brand]
+          : selectedBrands.filter(b => b !== brand));
+    };
+    
+    const handlePriceChange = (e) => {
+        setPriceFilter(e.target.value.replace(/[^0-9]/g, ''));
+    };
+    
     const handleSortPrice = (e) => {
         setSortPrice(e.target.value);
     };
-
-    useEffect(() => {
-        if (!filteredProductsQuery.isLoading) {
-            let filteredProducts = filteredProductsQuery.data;
-
-            // Lọc theo categories nếu có
-            if (checked.length > 0) {
-                filteredProducts = filteredProducts.filter(product => 
-                    checked.includes(product.category)
-                );
-            }
-
-            // Lọc theo brands nếu có
-            if (selectedBrands.length > 0) {
-                filteredProducts = filteredProducts.filter(product =>
-                    selectedBrands.includes(product.brand)
-                );
-            }
-
-            // Lọc theo price filter
-            if (priceFilter) {
-                filteredProducts = filteredProducts.filter(product => {
-                    const productPrice = product.price.toString();
-                    return productPrice.startsWith(priceFilter);
-                });
-            }
-
-            // Sắp xếp theo giá
-            if (sortPrice === "high-to-low") {
-                filteredProducts.sort((a, b) => b.price - a.price);
-            } else if (sortPrice === "low-to-high") {
-                filteredProducts.sort((a, b) => a.price - b.price);
-            }
-
-            dispatch(setProducts(filteredProducts));
-        }
-    }, [checked, selectedBrands, filteredProductsQuery.data, dispatch, priceFilter, sortPrice]);
-
-    const handleBrandClick = (brand, isChecked) => {
-        if (isChecked) {
-            setSelectedBrands([...selectedBrands, brand]);
-        } else {
-            setSelectedBrands(selectedBrands.filter(b => b !== brand));
-        }
-    };
-
-    const handleCheck = (value, id) => {
-        const updatedChecked = value
-            ? [...checked, id]
-            : checked.filter((c) => c !== id);
-        dispatch(setChecked(updatedChecked));
-    };
-
-
-    const uniqueBrands = [
-        ...Array.from(
-            new Set(
-                filteredProductsQuery.data
-                    ?.map((product) => product.brand)
-                    .filter((brand) => brand !== undefined)
-            )
-        ),
-    ];
-
-    // Tính toán số trang
-    const totalPages = products ? Math.ceil(products.length / itemsPerPage) : 1;
-
-    // Lấy dữ liệu cho trang hiện tại
-    const currentProducts = products
-        ? products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-        : [];
-
+    
     const handlePageChange = (page) => {
         setCurrentPage(page);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
+
+    const totalPages = products ? Math.ceil(products.length / itemsPerPage) : 1;
+    const currentProducts = products
+      ? products.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+      : [];
+
+    const uniqueBrands = [
+        ...new Set(
+          filteredProductsQuery.data
+            ?.map(p => p.brand)
+            .filter(brand => brand !== undefined)
+        )
+    ];
 
     return (
         <ScrollAnimator className="mt-10"> 
@@ -133,7 +115,6 @@ const Shop = () => {
                 <div className="flex md:flex-row">
                     {/* Sidebar */}
                     <div className="w-[250px] p-4 flex-shrink-0">
-                        {/* Tiêu đề "FILTERS" */}
                         <h2 className="mb-4 mt-5 text-xl flex items-center gap-2">FILTERS</h2>
                         {/* Filter theo Categories */}
                         <div className="border border-gray-300 p-4 mb-4 w-full">

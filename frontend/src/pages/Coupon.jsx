@@ -1,32 +1,26 @@
-import { useGetDiscountCodesQuery } from '../redux/api/discountApiSlice';
-import { useSaveUserCouponMutation } from '../redux/api/userCouponApiSlice';
+// Import thư viện & component
 import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { useGetDiscountCodesQuery } from '../redux/api/discountApiSlice';
+import { useSaveUserCouponMutation, useGetUserCouponsQuery } from '../redux/api/userCouponApiSlice';
 import Loader from '../components/Loader';
 import CouponCard from '../components/CouponCard';
-import Title from '../components/Title'
+import Title from '../components/Title';
 import ScrollAnimator from '../components/ScrollAnimator';
-import { useGetUserCouponsQuery } from '../redux/api/userCouponApiSlice';
 
-const bannerBgStyle = {
-  backgroundColor: '#efe9e0',
-  backgroundImage: 'radial-gradient(#dcd6cf 1px, transparent 1px)',
-  backgroundSize: '10px 10px',
-};
-
-const gridBgStyle = {
-  backgroundColor: '#f9fafb', 
-};
+// Style constants
+const gridBgStyle = { backgroundColor: '#f9fafb' };
 
 const Coupon = () => {
-  const { data: discountData, isLoading: discountLoading } = useGetDiscountCodesQuery();
-  const [saveUserCoupon] = useSaveUserCouponMutation();
+  // Lấy userInfo từ Redux Store
   const { userInfo } = useSelector((state) => state.auth);
-  const { data: userCouponsData } = useGetUserCouponsQuery(undefined, {
-    refetchOnMountOrArgChange: true,
-  });
 
-  // Kiểm tra coupon có hợp lệ không (chưa hết hạn và chưa hết lượt sử dụng)
+  // Gọi API lấy danh sách discount codes & user coupons
+  const { data: discountData, isLoading: discountLoading } = useGetDiscountCodesQuery();
+  const { data: userCouponsData } = useGetUserCouponsQuery(undefined, { refetchOnMountOrArgChange: true });
+  const [saveUserCoupon] = useSaveUserCouponMutation();
+
+  // kiểm tra coupon còn hiệu lực không
   const isCouponValid = (coupon) => {
     const now = new Date();
     const endDate = new Date(coupon.endDate);
@@ -36,7 +30,7 @@ const Coupon = () => {
     );
   };
 
-  // Lấy danh sách coupon đã lưu, còn hiệu lực và chưa sử dụng
+  // Danh sách coupon user đã lưu & còn hiệu lực (SAVED)
   const savedCouponIds = userCouponsData?.data
     ?.filter(coupon => 
       coupon.discountCode && 
@@ -45,27 +39,24 @@ const Coupon = () => {
     )
     ?.map(c => c.discountCode?._id) || [];
 
+  // xử lý khi user click Save Coupon
   const handleSaveCoupon = async (discountCodeId) => {
     if (!userInfo) {
       toast.error('Please login to save discount code');
       return;
     }
 
-    // Tìm coupon cần lưu
     const couponToSave = discountData?.data?.find(discount => discount._id === discountCodeId);
-    
     if (!couponToSave) {
       toast.error('Coupon not found');
       return;
     }
 
-    // Kiểm tra coupon có hết hạn hoặc hết lượt sử dụng không
     if (!isCouponValid(couponToSave)) {
       toast.error('This coupon has expired or reached its usage limit');
       return;
     }
 
-    // Kiểm tra coupon đã được sử dụng chưa
     const existingCoupon = userCouponsData?.data?.find(
       c => c.discountCode?._id === discountCodeId
     );
@@ -73,7 +64,7 @@ const Coupon = () => {
       toast.error('This coupon has already been used');
       return;
     }
-  
+
     try {
       await saveUserCoupon(discountCodeId).unwrap();
       toast.success('Save discount code successfully');
@@ -82,12 +73,11 @@ const Coupon = () => {
     }
   };
 
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <ScrollAnimator>
-        <div 
-        className="relative h-64 md:h-80 flex items-center justify-center text-black bg-[#efe9e0] overflow-hidden"
-        >
+        <div className="relative h-64 md:h-80 flex items-center justify-center text-black bg-[#efe9e0] overflow-hidden">
           <div className='relative z-10 text-center px-4'>
             <div className='text-7xl text-center'>
               <Title text1={'DISCOUNT'} text2={'COUPONS'} />
@@ -102,10 +92,7 @@ const Coupon = () => {
         </div>
       </ScrollAnimator>
 
-      <ScrollAnimator 
-        className="py-16 px-4 mt-[-4rem] relative z-10"
-        style={gridBgStyle}
-      >
+      <ScrollAnimator className="py-16 px-4 mt-[-4rem] relative z-10" style={gridBgStyle}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
           {discountLoading ? (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-16">

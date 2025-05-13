@@ -22,7 +22,7 @@ const Login = ({ setAdminInfo }) => {
       localStorage.setItem('adminInfo', JSON.stringify(data));
       localStorage.setItem('adminToken', data.token); 
 
-      setAdminInfo(data); // trigger re-render
+      setAdminInfo(data); // trigger App re-render 
       toast.success('Login successful');
       navigate('/admin/dashboard');
     } catch (error) {

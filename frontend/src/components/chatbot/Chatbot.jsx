@@ -161,6 +161,7 @@ const Chatbot = () => {
           </div>
 
           <div className="chat-footer p-3 bg-white border-t border-gray-200">
+            {/* props */}
             <ChatForm
               chatHistory={chatHistory}
               setChatHistory={setChatHistory}

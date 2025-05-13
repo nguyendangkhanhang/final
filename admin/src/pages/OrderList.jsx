@@ -1,6 +1,5 @@
 import { useState } from "react";
 import Message from "@frontend/components/Message";
-import Loader from "@frontend/components/Loader";
 import { Link } from "react-router-dom";
 import { useGetOrdersQuery, useUpdateOrderStatusMutation } from "@frontend/redux/api/orderApiSlice";
 import Pagination from '@frontend/components/Pagination';

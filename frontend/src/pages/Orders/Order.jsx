@@ -8,7 +8,6 @@ import Loader from "../../components/Loader";
 import Title from '../../components/Title';
 import ScrollAnimator from '../../components/ScrollAnimator';
 import {
-  useDeliverOrderMutation,
   useGetOrderDetailsQuery,
   useGetPaypalClientIdQuery,
   usePayOrderMutation,
@@ -17,16 +16,16 @@ import { formatPrice } from "../../Utils/cartUtils";
 
 const Order = () => {
   const { id: orderId } = useParams();
-  const { state } = useLocation(); // ✅ Nhận state để kiểm tra fromCOD
+  const { state } = useLocation(); 
 
   const { data: order, refetch, isLoading, error } = useGetOrderDetailsQuery(orderId);
   const [payOrder, { isLoading: loadingPay }] = usePayOrderMutation();
-  const [deliverOrder, { isLoading: loadingDeliver }] = useDeliverOrderMutation();
   const { userInfo } = useSelector((state) => state.auth);
 
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
   const { data: paypal, isLoading: loadingPayPal, error: errorPayPal } = useGetPaypalClientIdQuery();
 
+  
   useEffect(() => {
     if (!errorPayPal && !loadingPayPal && paypal?.clientId) {
       const loadPaypalScript = async () => {
@@ -34,7 +33,7 @@ const Order = () => {
           type: "resetOptions",
           value: {
             "client-id": paypal.clientId,
-            currency: "USD",
+            currency: "VND",
           },
         });
         paypalDispatch({ type: "setLoadingStatus", value: "pending" });
@@ -70,10 +69,6 @@ const Order = () => {
     toast.error(err.message);
   }
 
-  const deliverHandler = async () => {
-    await deliverOrder(orderId);
-    refetch();
-  };
 
   const subtotal = order?.itemsPrice || 0;
   const shipping = order?.shippingPrice || 0;
@@ -258,18 +253,6 @@ const Order = () => {
                         />
                       )}
                     </div>
-                  )}
-
-                  {/* Admin Deliver button */}
-                  {loadingDeliver && <Loader />}
-                  {userInfo?.isAdmin && order?.isPaid && !order?.isDelivered && (
-                    <button
-                      type="button"
-                      className="w-full py-3 px-6 text-white bg-blue-600 rounded-md hover:bg-blue-700"
-                      onClick={deliverHandler}
-                    >
-                      Mark As Delivered
-                    </button>
                   )}
                 </div>
               </div>

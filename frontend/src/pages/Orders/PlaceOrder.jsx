@@ -37,7 +37,7 @@ const PlaceOrder = () => {
   const placeOrderHandler = async () => {
     try {
       console.log('Cart items before validation:', cart.cartItems);
-  
+      
       const validatedOrderItems = cart.cartItems.map((item) => {
         const id = item._id || item.product;
   
@@ -68,7 +68,7 @@ const PlaceOrder = () => {
         discountPercentage: cart.discount?.discountPercentage || 0,
       }).unwrap();
   
-      // Update quantities
+      // Update số lượng từng size của sản phẩm
       const productUpdates = {};
 
       for (const item of cart.cartItems) {
