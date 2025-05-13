@@ -7,12 +7,16 @@ export const saveUserCoupon = async (req, res) => {
     const { discountCodeId } = req.body;
     const userId = req.user._id;
 
+    const now = new Date();
+    const endOfToday = new Date(now);
+    endOfToday.setHours(23, 59, 59, 999);
+
     // Kiểm tra mã giảm giá có tồn tại và còn hiệu lực không
     const discountCode = await DiscountCode.findOne({
       _id: discountCodeId,
       isActive: true,
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() }
+      startDate: { $lte: endOfToday },  // Cho phép startDate <= hôm nay
+      endDate: { $gte: now }            // Chỉ cần endDate >= thời điểm hiện tại
     });
 
     if (!discountCode) {

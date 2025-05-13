@@ -14,7 +14,6 @@ const validateDiscountCodeData = (req) => {
         }
     }
 
-
     // Validate discountPercentage
     if (
         req.body.discountPercentage === undefined ||
@@ -26,16 +25,6 @@ const validateDiscountCodeData = (req) => {
     }
 
 
-    // Validate startDate
-    if (!req.body.startDate || isNaN(new Date(req.body.startDate).getTime())) {
-        errors.push({ field: 'startDate', message: 'Invalid start date' });
-    } else {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (new Date(req.body.startDate) < today) {
-            errors.push({ field: 'startDate', message: 'Start date cannot be in the past' });
-        }
-    }
 
     // Validate endDate
     if (!req.body.endDate || isNaN(new Date(req.body.endDate).getTime())) {
@@ -63,57 +52,59 @@ const validateDiscountCodeData = (req) => {
 // Validate discount code
 const validateDiscountCode = async (req, res) => {
     try {
-        const { code, orderAmount } = req.body;
-        const currentDate = new Date();
-
-        const discountCode = await DiscountCode.findOne({
-            code: code.toUpperCase(),
-            isActive: true,
-            startDate: { $lte: currentDate },
-            endDate: { $gte: currentDate }
+      const { code, orderAmount } = req.body;
+      const now = new Date();
+      const endOfToday = new Date(now);
+      endOfToday.setHours(23, 59, 59, 999);
+  
+      const discountCode = await DiscountCode.findOne({
+        code: code.toUpperCase(),
+        isActive: true,
+        startDate: { $lte: endOfToday },  // ✅ Cho phép dùng tới hết ngày
+        endDate: { $gte: now }             // ✅ Check endDate >= hiện tại
+      });
+  
+      if (!discountCode) {
+        return res.status(404).json({
+          success: false,
+          message: 'Invalid discount code or expired'
         });
-
-        if (!discountCode) {
-            return res.status(404).json({
-                success: false,
-                message: 'Invalid discount code or expired'
-            });
-        }
-
-        if (discountCode.usedCount >= discountCode.usageLimit) {
-            return res.status(400).json({
-                success: false,
-                message: 'Discount code has reached its usage limit'
-            });
-        }
-
-        if (orderAmount < discountCode.minimumOrderAmount) {
-            return res.status(400).json({
-                success: false,
-                message: `Order must have a minimum value of ${discountCode.minimumOrderAmount}`
-            });
-        }
-
-        const discountAmount = (orderAmount * discountCode.discountPercentage) / 100;
-        const finalAmount = orderAmount - discountAmount;
-
-        res.status(200).json({
-            success: true,
-            data: {
-                discountCode: discountCode.code,
-                discountPercentage: discountCode.discountPercentage,
-                discountAmount,
-                finalAmount
-            }
+      }
+  
+      if (discountCode.usedCount >= discountCode.usageLimit) {
+        return res.status(400).json({
+          success: false,
+          message: 'Discount code has reached its usage limit'
         });
+      }
+  
+      if (orderAmount < discountCode.minimumOrderAmount) {
+        return res.status(400).json({
+          success: false,
+          message: `Order must have a minimum value of ${discountCode.minimumOrderAmount}`
+        });
+      }
+  
+      const discountAmount = (orderAmount * discountCode.discountPercentage) / 100;
+      const finalAmount = orderAmount - discountAmount;
+  
+      res.status(200).json({
+        success: true,
+        data: {
+          discountCode: discountCode.code,
+          discountPercentage: discountCode.discountPercentage,
+          discountAmount,
+          finalAmount
+        }
+      });
     } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: 'Server error',
-            error: error.message
-        });
+      res.status(500).json({
+        success: false,
+        message: 'Server error',
+        error: error.message
+      });
     }
-};
+  };
 
 // Create new discount code
 const createDiscountCode = async (req, res) => {

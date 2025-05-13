@@ -59,8 +59,8 @@ router.post("/create-order", async (req, res) => {
           },
         ],
         application_context: {
-          return_url: `http://192.168.2.78:5000/api/paypal/success?orderId=${orderId}`,
-          cancel_url: "http://192.168.2.78:5000/api/paypal/cancel",
+          return_url: `http://192.168.1.32:5000/api/paypal/success?orderId=${orderId}`,
+          cancel_url: "http://192.168.1.32:5000/api/paypal/cancel",
           user_action: "PAY_NOW",
         },
       },
